@@ -28,17 +28,23 @@ architecture archRAM of RAM is
     end component;
 
 begin
-    cEnable <= '1' when (((W =  '1') or (R = '1')) and mfc_m = '0')
+    -- enable the register when w or r signal comes
+    cEnable <= '1' when (((W =  '1') or (R = '1')))
     else '0';
     c1: Counter 
     generic map(4)
     port map(cEnable,cReset,CLK,'0',cOutput,"0001");
 
+    -- MFC appears one clock after 8th clocks
     MFC <= mfc_m;
-    mfc_m <= '1' when (cOutput = "1000" and CLK'event and CLK = '1')
-    else '0' when (cOutput(3) = '0' and CLK'event and not(CLK) = '0');
-    cReset <= '1' when (cOutput = "1000")
+    mfc_m <= '1' when (cOutput = "0111" and CLK'event and CLK = '1')
+    else '0' when   (CLK'event and CLK = '1');
+
+    -- reset the counter when comes to 8 or a signal read or write
+    cReset <= '1' when ((cOutput = "1000") or (W'event and W = '1') or (R'event and R = '1') )
     else '0';
+
+    -- memory retrieve 28 pixel of data after 8 bits
     process(cOutput)
 	variable k,j,adds:integer;
     begin

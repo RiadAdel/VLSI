@@ -51,7 +51,7 @@ begin
         k := -16;
         j := -1;
         if  (cOutput = "1000" and W = '1')then
-            ram(to_integer(unsigned(address))) <= data;
+            ram(to_integer(unsigned(address))) <= data(15 downto 0);
         elsif  (cOutput = "1000" and R = '1')then
             loop1: for i in 0 to 27 loop
                 k := k + 16;
