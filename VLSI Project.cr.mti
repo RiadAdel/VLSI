@@ -1,13 +1,4 @@
-{D:/3rd Year/VLSI/VLSI prject/counter.vhd} {1 {vcom -work work -2002 -explicit -stats=none {D:\3rd Year\VLSI\VLSI prject\counter.vhd}
-Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
--- Loading package STANDARD
--- Loading package TEXTIO
--- Loading package std_logic_1164
--- Loading package NUMERIC_STD
--- Compiling entity Counter
--- Compiling architecture CounterImplementation of Counter
-
-} {} {}} {D:/3rd Year/VLSI/VLSI prject/RAM.vhd} {2 {vcom -work work -2002 -explicit -stats=none {D:\3rd Year\VLSI\VLSI prject\RAM.vhd}
+{D:/3rd Year/VLSI/VLSI prject/RAM.vhd} {2 {vcom -work work -2002 -explicit -stats=none {D:\3rd Year\VLSI\VLSI prject\RAM.vhd}
 Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
 -- Loading package STANDARD
 -- Loading package TEXTIO
@@ -16,6 +7,15 @@ Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  
 -- Compiling entity RAM
 -- Compiling architecture archRAM of RAM
 ** Warning: D:\3rd Year\VLSI\VLSI prject\RAM.vhd(48): (vcom-1272) Length of expected is 16; length of actual is 448.
+
+} {} {}} {D:/3rd Year/VLSI/VLSI prject/counter.vhd} {1 {vcom -work work -2002 -explicit -stats=none {D:\3rd Year\VLSI\VLSI prject\counter.vhd}
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity Counter
+-- Compiling architecture CounterImplementation of Counter
 
 } {} {}} {D:/3rd Year/VLSI/VLSI prject/my_adder.vhd} {1 {vcom -work work -2002 -explicit -stats=none {D:/3rd Year/VLSI/VLSI prject/my_adder.vhd}
 Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
