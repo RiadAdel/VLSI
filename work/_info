@@ -1,0 +1,209 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+dC:/intelFPGA/18.0
+Ecounter
+Z0 w1554995400
+Z1 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+Z2 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z3 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+Z4 dD:/3rd Year/VLSI/VLSI prject
+Z5 8D:\3rd Year\VLSI\VLSI prject\counter.vhd
+Z6 FD:\3rd Year\VLSI\VLSI prject\counter.vhd
+l0
+L5
+VcEGndOYP__FD_zfgMQiGE2
+!s100 `Ee_n5kX??RR3SmDMoe=m2
+Z7 OV;C;10.5b;63
+32
+Z8 !s110 1554997915
+!i10b 1
+Z9 !s108 1554997915.000000
+Z10 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|D:\3rd Year\VLSI\VLSI prject\counter.vhd|
+Z11 !s107 D:\3rd Year\VLSI\VLSI prject\counter.vhd|
+!i113 1
+Z12 o-work work -2002 -explicit
+Z13 tExplicit 1 CvgOpt 0
+Acounterimplementation
+R1
+R2
+R3
+DEx4 work 7 counter 0 22 cEGndOYP__FD_zfgMQiGE2
+l29
+L16
+VPK2a4`@0]_W@Z?z4DIzRk3
+!s100 CRR5gHb24cc_>ihPB_W4[2
+R7
+32
+R8
+!i10b 1
+R9
+R10
+R11
+!i113 1
+R12
+R13
+Edma
+Z14 w1554993236
+R2
+R3
+R4
+Z15 8D:\3rd Year\VLSI\VLSI prject\DMA.vhd
+Z16 FD:\3rd Year\VLSI\VLSI prject\DMA.vhd
+l0
+L3
+V;zo1>`10FRkP[4MZTJFge2
+!s100 gO2>S1;oPlW6[5cLk6MI?3
+R7
+32
+R8
+!i10b 1
+R9
+Z17 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|D:\3rd Year\VLSI\VLSI prject\DMA.vhd|
+Z18 !s107 D:\3rd Year\VLSI\VLSI prject\DMA.vhd|
+!i113 1
+R12
+R13
+Adma_arch
+R2
+R3
+DEx4 work 3 dma 0 22 `Lok7RC_>8c9jaG7`KMLS0
+l11
+L9
+Viz[azz[2EkZ3Z_]bAQ;>A1
+!s100 1k_EAMMTcm?2??QM?SJ841
+R7
+32
+!s110 1554987015
+!i10b 1
+!s108 1554987015.000000
+R17
+R18
+!i113 1
+R12
+R13
+Emy_adder
+Z19 w1551685810
+R2
+R3
+R4
+Z20 8D:/3rd Year/VLSI/VLSI prject/my_adder.vhd
+Z21 FD:/3rd Year/VLSI/VLSI prject/my_adder.vhd
+l0
+L5
+V^DJmWUaQ42UGB=Ga0bKo<1
+!s100 ZS5DnOk;Beh4Zzc>OBO:C3
+R7
+32
+R8
+!i10b 1
+R9
+Z22 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|D:/3rd Year/VLSI/VLSI prject/my_adder.vhd|
+Z23 !s107 D:/3rd Year/VLSI/VLSI prject/my_adder.vhd|
+!i113 1
+R12
+R13
+Aa_my_adder
+R2
+R3
+DEx4 work 8 my_adder 0 22 ^DJmWUaQ42UGB=Ga0bKo<1
+l14
+L12
+V0Z28DmSQNOW4LIX]A:0eQ3
+!s100 Ce35Bafz7fj_o0h02Kdjo2
+R7
+32
+R8
+!i10b 1
+R9
+R22
+R23
+!i113 1
+R12
+R13
+Emy_nadder
+Z24 w1551685811
+R2
+R3
+R4
+Z25 8D:\3rd Year\VLSI\VLSI prject\my_nadder.vhd
+Z26 FD:\3rd Year\VLSI\VLSI prject\my_nadder.vhd
+l0
+L5
+V=^eoWUBOSV0B=zIMj0RA11
+!s100 ANfQFSD?z@zWH_j5Co6EJ2
+R7
+32
+R8
+!i10b 1
+R9
+Z27 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|D:\3rd Year\VLSI\VLSI prject\my_nadder.vhd|
+Z28 !s107 D:\3rd Year\VLSI\VLSI prject\my_nadder.vhd|
+!i113 1
+R12
+R13
+Aa_my_nadder
+R2
+R3
+DEx4 work 9 my_nadder 0 22 =^eoWUBOSV0B=zIMj0RA11
+l25
+L15
+VoaNTf`9jll2N]<fjWC3H;1
+!s100 =?TdZUK6<7]@>bjz4Yk1g2
+R7
+32
+R8
+!i10b 1
+R9
+R27
+R28
+!i113 1
+R12
+R13
+Eram
+Z29 w1554997906
+R1
+R2
+R3
+R4
+Z30 8D:\3rd Year\VLSI\VLSI prject\RAM.vhd
+Z31 FD:\3rd Year\VLSI\VLSI prject\RAM.vhd
+l0
+L5
+V8V_M3cWABRMcj3H20:6R>1
+!s100 EcmVd@L7>535nK9XWcn1l3
+R7
+32
+R8
+!i10b 1
+R9
+Z32 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|D:\3rd Year\VLSI\VLSI prject\RAM.vhd|
+Z33 !s107 D:\3rd Year\VLSI\VLSI prject\RAM.vhd|
+!i113 1
+R12
+R13
+Aarchram
+R1
+R2
+R3
+Z34 DEx4 work 3 ram 0 22 8V_M3cWABRMcj3H20:6R>1
+l30
+L13
+VE9Ae3GjiJOf>DgU>?J:7z3
+!s100 74RWdfF2Tn8oOZFm`aoTh3
+R7
+32
+R8
+!i10b 1
+R9
+R32
+R33
+!i113 1
+R12
+R13
