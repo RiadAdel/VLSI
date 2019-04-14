@@ -2,7 +2,7 @@ LIBRARY IEEE;
 USE IEEE.std_logic_1164.all;
 
 ENTITY triStateBuffer IS
-	GENERIC ( n : integer := 16);
+	Generic ( n : integer := 16);
 	PORT(	D : IN std_logic_vector(n-1 downto 0);
 		EN : IN std_logic;
 		F : OUT std_logic_vector(n-1 downto 0));
