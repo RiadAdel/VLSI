@@ -3,12 +3,11 @@ USE IEEE.std_logic_1164.all;
 use work.constants.all;
 
 
-ENTITY CNN IS
-	PORT(	rst , clk:std_logic;
-		LayerInfoOut : OUT std_logic_vector(15 downto 0));
-END ENTITY CNN;
+ENTITY Main IS
+	PORT(rst , clk: IN std_logic);
+END ENTITY Main;
 
-ARCHITECTURE vlsi OF CNN IS	
+ARCHITECTURE vlsi OF Main IS	
 
 -- state decleration-------  
 signal next_state:state;
@@ -35,7 +34,7 @@ signal ImgAddACKTriIN: std_logic_vector(12 downto 0);
 signal WriteF:std_logic;
 signal ReadF:std_logic;
 signal AddressF: std_logic_vector(12 downto 0);
-signal DataF: std_logic_vector( 400 downto 0 );
+signal DataF: std_logic_vector( 399 downto 0 );
 
 signal ACKF:std_logic;
 -------Img memory -------
@@ -50,11 +49,13 @@ signal ACKI:std_logic;
 ------#of layers---------
 signal NoOfLayers:std_logic_vector(15 downto 0);
 ------------------------
+signal LayerInfoOut:std_logic_vector(15 downto 0);
+signal ImgWidthOut:std_logic_vector(15 downto 0);
 
 
 BEGIN
 ---conditions---
-FilterAddressEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' ));
+FilterAddressEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )) else '0';
 TriStateCounterEN <= '1' when (current_state = RI and ACKF = '1' ) else '0';
 ImgAddRegEN <= '1' when (current_state = RL and ACKI = '1' ) else '0';
 ImgAddACKTriEN<='1' when (current_state = RL ) else '0';
@@ -66,25 +67,26 @@ ImgAddACKTriIN <= zero&ACKI;
 --register decliration---
 
 
-FilterMem:entity work.RAM generic map (X=>25) port map (clk,  WriteF  ,ReadF,AddressF , DataF , ACKF);
-ImgMem:entity work.RAM generic map (X=>28) port map (clk,WriteI , ReadI ,AddressI , DataI  ,ACKI );
+FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataF , ACKF);
+ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataI  ,ACKI );
 
-ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataF(15 downto 0) ,ReadF, NoOfLayers , AddressF );
+ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataF(15 downto 0) , NoOfLayers , AddressF );
 
 
 FilterAddress:entity work.nBitRegister generic map (n=>13) port map ( FilterAddressIN , clk , rst ,FilterAddressEN , FilterAddressOut );
-CounterTryState:entity work.triStateBuffer generic map (n=>13) port map ( TriStateCounterOUT , TriStateCounterEN,FilterAddressIN );
-FilterAddressCounter:entity work.my_nadder generic map (n=>13) port map ( FilterAddressOut ,(others=>'0') ,'1', TriStateCounterOUT);
+AdderTryState:entity work.triStateBuffer generic map (n=>13) port map ( TriStateCounterOUT , TriStateCounterEN,FilterAddressIN );
+FilterAddressAdder:entity work.my_nadder generic map (n=>13) port map ( FilterAddressOut ,(others=>'0') ,'1', TriStateCounterOUT);
 
 ImgAddReg:entity work.nBitRegister generic map (n=>13) port map ( ImgAddRegIN , clk , rst ,ImgAddRegEN , ImgAddRegOut );
 ImgAddACKTri:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddACKTriIN, ImgAddACKTriEN, ImgAddRegIN );
 
+ReadLayerInfo:entity work.ReadLayerInfo generic map (n=>13) port map (DataF(15 downto 0 ),DataI(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
 
 --------------------------
 
 
 -- get the next state circuit--
-state_decode_proc: process(current_state)
+state_decode_proc: process(current_state,ACKF)
 BEGIN
 
 	case current_state is 
@@ -121,12 +123,19 @@ end process;
 -- end of circuit--
 
 --output of process circuit--
-output_proc : process(current_state)
+output_proc : process(current_state,ACKF,ACKI)
 begin
 	case current_state is
 		when RI=>
-			ReadF<='1';
+			ReadF<= '1';
+			ReadI<='0';
+			WriteF<='0';
+			WriteI<='0';
 		when RL=>
+			ReadF<= '1';
+			ReadI<= '1';
+			WriteF<='0';
+			WriteI<='0';
 
 		when Pool_Cal_ReadImg=>
 		when Pool_Read_Img=>

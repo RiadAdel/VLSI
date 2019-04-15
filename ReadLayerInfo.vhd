@@ -5,7 +5,7 @@ use work.constants.all;
 ENTITY ReadLayerInfo IS
 	PORT(	LayerInfoIn ,ImgWidthIn : IN std_logic_vector(15 downto 0);
 		FilterAdd , ImgAdd : IN std_logic_vector(12 downto 0); 
-		EN ,clk , rst , ACKF , ACKI: IN std_logic;
+		clk , rst , ACKF , ACKI: IN std_logic;
 		current_state: IN state ;
 		LayerInfoOut ,ImgWidthOut: OUT std_logic_vector(15 downto 0);
 		FilterAddToDMA,ImgAddToDMA: OUT std_logic_vector(12 downto 0)	);
@@ -22,8 +22,8 @@ signal ImgAddTriEN :  std_logic;
 BEGIN 
 
 LayerInfEN <='1' when (current_state = RL and ACKF = '1' ) else '0';
-ImgWidthEN <='1' when (current_state = RL and ACKF = '1' )else '0';
-FilterAddTriEN<='1' when (current_state = RI  ) else '0';
+ImgWidthEN <='1' when (current_state = RL and ACKI = '1' )else '0';
+FilterAddTriEN<='1' when (current_state = RL  ) else '0';
 ImgAddTriEN<='1' when (current_state = RL ) else '0';
 
 LayerInf:entity work.nBitRegister generic map (n=>16) port map ( LayerInfoIn , clk , rst ,LayerInfEN , LayerInfoOut );
