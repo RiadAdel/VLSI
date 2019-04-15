@@ -3,10 +3,11 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity RAM is
+generic(X: integer := 28);
   port (
     CLK,W,R:in std_logic;
-    address:in std_logic_vector(9 downto 0);
-    data:inout std_logic_vector(447 downto 0);
+    address:in std_logic_vector(12 downto 0);
+    data:inout std_logic_vector(X*16 downto 0);
     MFC:out std_logic
   ) ;
 end RAM;
@@ -53,7 +54,7 @@ begin
         if  (cOutput = "1000" and W = '1')then
             ram(to_integer(unsigned(address))) <= data(15 downto 0);
         elsif  (cOutput = "1000" and R = '1')then
-            loop1: for i in 0 to 27 loop
+            loop1: for i in 0 to X-1 loop
                 k := k + 16;
                 j := j + 16;
     			adds := i + to_integer(unsigned(address));

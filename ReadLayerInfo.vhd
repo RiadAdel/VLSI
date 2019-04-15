@@ -19,34 +19,19 @@ signal ImgWidthEN :  std_logic;
 signal FilterAddTriEN :  std_logic;
 signal ImgAddTriEN :  std_logic;
 
-
-
-component nBitRegister IS
-	generic( n : integer := 16);
-	PORT(	D: IN std_logic_vector(n-1 downto 0);	
-		CLK,RST,EN : IN std_logic;
-		Q : OUT std_logic_vector(n-1 downto 0));
-END component;
-
-component triStateBuffer IS
-	GENERIC ( n : integer := 16);
-	PORT(	D : IN std_logic_vector(n-1 downto 0);
-		EN : IN std_logic;
-		F : OUT std_logic_vector(n-1 downto 0));
-END component;
-
 BEGIN 
 
-LayerInfEN <='1' when (current_state = RL and ACKF = '1' );
-ImgWidthEN <='1' when (current_state = RL and ACKF = '1' );
-FilterAddTriEN<='1' when (current_state = RI  );
-ImgAddTriEN<='1' when (current_state = RL );
+LayerInfEN <='1' when (current_state = RL and ACKF = '1' ) else '0';
+ImgWidthEN <='1' when (current_state = RL and ACKF = '1' )else '0';
+FilterAddTriEN<='1' when (current_state = RI  ) else '0';
+ImgAddTriEN<='1' when (current_state = RL ) else '0';
 
-LayerInf:nBitRegister generic map (n=>16) port map ( LayerInfoIn , clk , rst ,LayerInfEN , LayerInfoOut );
-ImgWidth:nBitRegister generic map (n=>16) port map ( ImgWidthIn , clk , rst ,ImgWidthEN , ImgWidthOut );
+LayerInf:entity work.nBitRegister generic map (n=>16) port map ( LayerInfoIn , clk , rst ,LayerInfEN , LayerInfoOut );
+ImgWidth:entity work.nBitRegister generic map (n=>16) port map ( ImgWidthIn , clk , rst ,ImgWidthEN , ImgWidthOut );
 
-FilterAddTriDMA:triStateBuffer generic map (n=>13) port map ( FilterAdd , FilterAddTriEN,FilterAddToDMA );
-ImgAddTriDMA:triStateBuffer generic map (n=>13) port map ( ImgAdd , ImgAddTriEN,ImgAddToDMA );
+FilterAddTriDMA:entity work.triStateBuffer generic map (n=>13) port map ( FilterAdd , FilterAddTriEN,FilterAddToDMA );
+ImgAddTriDMA:entity work.triStateBuffer generic map (n=>13) port map ( ImgAdd , ImgAddTriEN,ImgAddToDMA );
+
 
 
 
