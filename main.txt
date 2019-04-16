@@ -52,7 +52,7 @@ sim:/main/AddressI \
 sim:/main/DataI \
 sim:/main/ACKI \
 sim:/main/NoOfLayers \
-sim:/main/ImgWidthOut
+sim:/main/ImgWidthOut 
 force -freeze sim:/main/rst 1 0
 force -freeze sim:/main/clk 1 0, 0 {50 ps} -r 100
 run

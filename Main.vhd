@@ -9,6 +9,9 @@ END ENTITY Main;
 
 ARCHITECTURE vlsi OF Main IS	
 
+signal counterOutF : std_logic_vector(3 downto 0);
+signal counterOutI : std_logic_vector(3 downto 0);
+
 -- state decleration-------  
 signal next_state:state;
 signal current_state:state;
@@ -51,6 +54,9 @@ signal NoOfLayers:std_logic_vector(15 downto 0);
 ------------------------
 signal LayerInfoOut:std_logic_vector(15 downto 0);
 signal ImgWidthOut:std_logic_vector(15 downto 0);
+-------------------------
+signal WidthSquareOut :  std_logic_vector(5 downto 0);
+signal CounterWidthSquare :  std_logic_vector(1 downto 0);
 
 
 BEGIN
@@ -67,8 +73,8 @@ ImgAddACKTriIN <= zero&ACKI;
 --register decliration---
 
 
-FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataF , ACKF);
-ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataI  ,ACKI );
+FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataF , ACKF ,counterOutF);
+ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataI  ,ACKI ,counterOutI );
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataF(15 downto 0) , NoOfLayers , AddressF );
 
@@ -81,6 +87,9 @@ ImgAddReg:entity work.nBitRegister generic map (n=>13) port map ( ImgAddRegIN , 
 ImgAddACKTri:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddACKTriIN, ImgAddACKTriEN, ImgAddRegIN );
 
 ReadLayerInfo:entity work.ReadLayerInfo generic map (n=>13) port map (DataF(15 downto 0 ),DataI(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
+
+
+ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,LayerInfoOut,clk,rst,current_state);
 
 --------------------------
 
@@ -95,6 +104,12 @@ BEGIN
 			next_state<= RL;
 			end if ;
 		when RL=>
+			if ACKF = '1' then
+				if LayerInfoOut(15) = '1' then  
+					next_state<= conv_calc_ReadImg_ReadBias;
+				else 	next_state<= Pool_Cal_ReadImg;
+				end if;
+			end if;
 
 		when Pool_Cal_ReadImg=>
 		
@@ -132,12 +147,17 @@ begin
 			WriteF<='0';
 			WriteI<='0';
 		when RL=>
-			ReadF<= '1';
+			ReadF<='1';
 			ReadI<= '1';
 			WriteF<='0';
 			WriteI<='0';
 
 		when Pool_Cal_ReadImg=>
+			ReadF<='0';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
+
 		when Pool_Read_Img=>
 		when conv_calc_ReadImg_ReadBias=>
 		when conv_ReadImg_ReadFilter=>
