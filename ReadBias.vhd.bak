@@ -39,7 +39,7 @@ ARCHITECTURE DATA_FLOW OF ReadBias IS
 		
 BEGIN
 
-	B0 : nBitRegister port map(BIAS(15  DOWNTO   0),CLK,RST,STATE,outBias0);
+	B0 : nBitRegister port map(BIAS(15  DOWNTO  0 ),CLK,RST,STATE,outBias0);
 	B1 : nBitRegister port map(BIAS(31  DOWNTO  16),CLK,RST,STATE,outBias1);
 	B2 : nBitRegister port map(BIAS(47  DOWNTO  32),CLK,RST,STATE,outBias2);
 	B3 : nBitRegister port map(BIAS(63  DOWNTO  48),CLK,RST,STATE,outBias3);

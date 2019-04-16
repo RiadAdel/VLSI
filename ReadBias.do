@@ -21,9 +21,9 @@ force -freeze sim:/readbias/RST 1 0
 force -freeze sim:/readbias/BIAS 11110000100011001010100110111101 0
 force -freeze sim:/readbias/STATE 1 0
 run
-noforce sim:/readbias/RST
+force -freeze sim:/readbias/RST 0 0
 force -freeze sim:/readbias/FilterAddress 0000 0
 force -freeze sim:/readbias/NOofFilters 0004 0
 run
-
+run
 
