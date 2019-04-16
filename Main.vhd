@@ -57,6 +57,7 @@ signal ImgWidthOut:std_logic_vector(15 downto 0);
 -------------------------
 signal WidthSquareOut :  std_logic_vector(5 downto 0);
 signal CounterWidthSquare :  std_logic_vector(1 downto 0);
+signal ACKWidth : std_logic;
 
 
 BEGIN
@@ -73,8 +74,8 @@ ImgAddACKTriIN <= zero&ACKI;
 --register decliration---
 
 
-FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataF , ACKF ,counterOutF);
-ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataI  ,ACKI ,counterOutI );
+FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataF , ACKF ,counterOutF );
+ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataI  ,ACKI ,counterOutI);
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataF(15 downto 0) , NoOfLayers , AddressF );
 
@@ -89,29 +90,32 @@ ImgAddACKTri:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddACK
 ReadLayerInfo:entity work.ReadLayerInfo generic map (n=>13) port map (DataF(15 downto 0 ),DataI(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
 
 
-ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,LayerInfoOut,clk,rst,current_state);
+ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,LayerInfoOut,clk,rst,current_state , ACKWidth);
 
 --------------------------
 
 
 -- get the next state circuit--
-state_decode_proc: process(current_state,ACKF)
+state_decode_proc: process(current_state,ACKF,ACKWidth ,clk)
 BEGIN
 
 	case current_state is 
 		when RI =>
-			if ACKF = '1' then 
+			if (ACKF'EVENT AND ACKF = '1') then 
 			next_state<= RL;
 			end if ;
 		when RL=>
-			if ACKF = '1' then
-				if LayerInfoOut(15) = '1' then  
+			  if  ACKF = '1' and (clk'EVENT AND clk = '0')  then
+				if DataF(15) = '1' then  
 					next_state<= conv_calc_ReadImg_ReadBias;
 				else 	next_state<= Pool_Cal_ReadImg;
 				end if;
 			end if;
 
 		when Pool_Cal_ReadImg=>
+			if (ACKWidth'EVENT AND ACKWidth = '1') then 
+			next_state<= RI;
+			end if ;
 		
 		when Pool_Read_Img=>
 		when conv_calc_ReadImg_ReadBias=>

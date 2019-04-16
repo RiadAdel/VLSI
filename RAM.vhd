@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.constants.all;
 
 entity RAM is
 generic(X: integer := 28);
@@ -45,8 +46,8 @@ begin
     else '0' when   (CLK'event and CLK = '1');
 
     -- reset the counter when comes to 8 or a signal read or write
-    cReset <= '1' when ((reset = '1') or (cOutput = "0011") or (W'event and W = '1') or (R'event and R = '1') )
-    else '0';
+    cReset <= '1' when ((reset = '1') or (cOutput = "0011")) -- or (W'event and W = '1') or (R'event and R = '1') )
+     else '0';
 
     -- memory retrieve 28 pixel of data after 8 bits
     process(cOutput)

@@ -7,12 +7,13 @@ ENTITY CalculateInfo IS
 		CounOut : OUT std_logic_vector(1 downto 0);
 		LayerInfoIn  : IN std_logic_vector(15 downto 0);
 		clk , rst : IN std_logic;
-		current_state: IN state );
+		current_state: IN state; 
+		ACK: Out std_logic);
 END ENTITY CalculateInfo;
 
 
 ARCHITECTURE CalInfo OF CalculateInfo IS	
-
+signal ACKW :std_logic;
 signal WSquareEN : std_logic;
 signal WSquareIN : std_logic_vector(5 downto 0);
 signal Wminus1 : std_logic_vector(2 downto 0);
@@ -56,26 +57,31 @@ component Counter is
 end component;
 
 
+
 BEGIN 
 
 --WSquareEN <= '0' when (current_state = RI ) or ((current_state = RL ))     else '1';
 
 WSquareEN <= '1' when (current_state = Pool_Cal_ReadImg ) or ((current_state = conv_calc_ReadImg_ReadBias ))     else '0';
-CountereEN <= '1' when (current_state = Pool_Cal_ReadImg ) or ((current_state = conv_calc_ReadImg_ReadBias ))     else '0';
-CountereRST <= '1' when (rst = '1') or (CounterOut = "01") else '0' ;
+CountereEN <= '1' when ((current_state = Pool_Cal_ReadImg ) or (current_state = conv_calc_ReadImg_ReadBias )) and (ACKW = '0')      else '0';
+CountereRST <= '1' when (rst = '1') or (CounterOut = "10") else '0' ;
+ACKW <= '1' when(CounterOut = "01" and  (CLK'event and CLK = '1'))
+else '0' when   (CLK'event and CLK = '1'); 
+ACK <=ACKW;
+
 CounOut <=CounterOut;
 -- layerInforIn dont know where exacly is the size of filter
-WSquareMulti:Multiplier generic map (3) port map ( LayerInfoIn(2 downto 0) , Wminus1 ,WSquareIN );
+WSquareMulti:Multiplier generic map (n=>3) port map ( LayerInfoIn(4 downto 2) , Wminus1 ,WSquareIN );
 ---values here is also wrong in LayerInfoIn cause i dont know index and its length and second parameter i must send -1
 --- but i dont know the legth and if our adder handle signed or not and that shittttttt
-adder:my_nadder generic map (n=>3) port map ( LayerInfoIn(2 downto 0) ,'1'&'1'&'1' ,'0',Wminus1 );
+adder:my_nadder generic map (n=>3) port map ( LayerInfoIn(4 downto 2) ,'1'&'1'&'1' ,'0',Wminus1 );
 
 
 WSquareReg:nBitRegister generic map (n=>6) port map ( WSquareIN , clk , rst ,WSquareEN , WSquareOut );
 
 
 --- want to know the value to stop at and when to rest it  and EN there is still alot to do 
-EndCounter:Counter generic map (n=>2) port map ( CountereEN ,rst , clk , '0' ,CounterOut , "00" );
+EndCounter:Counter generic map (n=>2) port map ( CountereEN ,CountereRST , clk , '0' ,CounterOut , "00" );
 
 
 
