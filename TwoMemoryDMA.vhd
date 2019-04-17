@@ -7,11 +7,11 @@ entity memDMA is
 	Port (	
 		AddressIn : in std_logic_vector(9 downto 0); -- TODO ABZO: change size to 13 bits address to access memory
 		dataIn: in std_logic_vector(15 downto 0);
-		switcherEN:in std_logic;		     -- exchange input with output ram
-		ramSelector:in std_logic;                    -- selects either Input ram or output ram(D of flipflop)
+		switcherEN:in std_logic;		     -- exchange input ram with output ram
+		ramSelector:in std_logic;                    -- -0 for input ram(i want to read from) ,1 for output ram(i want to save in)
 		readEn,writeEn,CLK: in std_logic;	
 		
-		Normal: in std_logic;			     --just set it to 0 when start
+		Normal: inout std_logic;		     --just set it to 0 when start
 		MFC:out std_logic;			
 		dataOut : out std_logic_vector(447 downto 0)); 
 End Entity  memDMA; 
@@ -35,8 +35,9 @@ PORT( D,CLOCK: in std_logic;
 end Component;
 
 ---------Signals
-Signal dataFromRam :std_logic_vector(447 downto 0);
-Signal mfcOfRam :std_logic;
+Signal dataFromTORam1 :std_logic_vector(447 downto 0);
+Signal dataFromTORam2 :std_logic_vector(447 downto 0);
+Signal mfcOfRam1,mfcOfRam2 :std_logic;
 Signal DInput,Qout,Qbarout: std_logic;
 --------- 
 begin	
@@ -47,7 +48,7 @@ Dinput <= Normal XOR RamSelector;
 		begin
 
 		if(switcherEN='1') then
-				Normal <= !Normal;
+				Normal <= not Normal;
 		end if;
 	end process;
 
@@ -55,11 +56,21 @@ Dinput <= Normal XOR RamSelector;
 DFF: D_FF port map (Dinput,clk,Qout,Qbarout);
 
 --handle input output data 
-Ram1: RAM port map (CLK,writeeneable,readEn,addressIn,dataFromRlam,mfcOfRam);
-Ram2: RAM port map (CLK,,readEn,addressIn,dataFromRam,mfcOfRam);
+Ram1: RAM port map (CLK,Qout,Qbarout,addressIn,dataFromTORam1,mfcOfRam1);
+Ram2: RAM port map (CLK,Qbarout,Qout,addressIn,dataFromTORam2,mfcOfRam2);
 
-FilterMFC <=  mfcOfRam;
-valueOut <= dataFromRam(399 downto 0);
+--read
+dataOut <= 
+     dataFromTORam2 when Qout = '1' and readEn ='1' else 
+     dataFromToRam1 when Qout = '0' and readEn ='1';
 
+--write
+dataFromToRam2 <= dataIn when Qout = '0' and writeEn = '1' ;
+dataFromToRam1 <= dataIn when Qout = '1' and writeEn = '1' ;
+
+--mfc happens in both write and read
+MFC <=        mfcOfRam1 when ramSelector = '0' and Qout = '0' else --read and no toggle happened(toggle 2 times = no toggle)
+	      mfcOfRam1 when ramSelector = '1' and Qout = '1' else --write and toggle happened
+	      mfcOfRam2 when ramSelector = '1' and Qout = '0' else --write and no toggle
+	      mfcOfRam2; 					   --read with toggle
 end DMAmemory;
-
