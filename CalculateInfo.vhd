@@ -13,6 +13,7 @@ END ENTITY CalculateInfo;
 
 
 ARCHITECTURE CalInfo OF CalculateInfo IS	
+signal CLKEvent : std_logic;
 signal ACKW :std_logic;
 signal WSquareEN : std_logic;
 signal WSquareIN : std_logic_vector(5 downto 0);
@@ -65,7 +66,10 @@ BEGIN
 WSquareEN <= '1' when (current_state = Pool_Cal_ReadImg ) or ((current_state = conv_calc_ReadImg_ReadBias ))     else '0';
 CountereEN <= '1' when ((current_state = Pool_Cal_ReadImg ) or (current_state = conv_calc_ReadImg_ReadBias )) and (ACKW = '0')      else '0';
 CountereRST <= '1' when (rst = '1') or (CounterOut = "10") else '0' ;
-ACKW <= '1' when(CounterOut = "01" and  (CLK'event and CLK = '1'))
+
+--CLKEvent <= '1' when (CLK'event and CLK = '1') else '0';
+
+ACKW <= '1' when( (CounterOut = "01") and (CLK'event and CLK = '1'))
 else '0' when   (CLK'event and CLK = '1'); 
 ACK <=ACKW;
 

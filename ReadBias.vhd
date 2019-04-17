@@ -1,55 +1,48 @@
 Library ieee;
 Use ieee.std_logic_1164.all;
- 
+use work.constants.all;
 ------------------------------------------------------
 ENTITY ReadBias IS
-	PORT(	STATE : in std_logic;
-		BIAS : IN STD_LOGIC_VECTOR(447 DOWNTO 0);
-		FilterAddress,NOofFilters : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+	PORT(	current_state : in state;
+		BIAS : IN STD_LOGIC_VECTOR(399 DOWNTO 0);
+		FilterAddress: IN STD_LOGIC_VECTOR(12 DOWNTO 0);
+		DMAAddressToFilter,UpdatedAddress: OUT STD_LOGIC_VECTOR(12 DOWNTO 0);
 		CLK,RST : IN std_logic;
-		DMAAddress,UpdatedAddress,outBias0,outBias1,outBias2 : out STD_LOGIC_VECTOR(15 DOWNTO 0);
-		outBias3,outBias4,outBias5,outBias6,outBias7 : out STD_LOGIC_VECTOR(15 DOWNTO 0));
+		LayerInfo : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+		outBias0,outBias1,outBias2 : out STD_LOGIC_VECTOR(15 DOWNTO 0);
+		outBias3,outBias4,outBias5,outBias6,outBias7 : out STD_LOGIC_VECTOR(15 DOWNTO 0);
+		ACKF: IN std_logic);
 END ReadBias;
 
 ------------------------------------------------
 ARCHITECTURE DATA_FLOW OF ReadBias IS
- 
- -- (here we add the previous full adder) ----
-	COMPONENT nBitRegister IS
-		generic( n : integer := 16);
-		PORT(	D: IN std_logic_vector(n-1 downto 0);	
-			CLK,RST,EN : IN std_logic;
-			Q : OUT std_logic_vector(n-1 downto 0));
-	END COMPONENT;
 
-	COMPONENT triStateBuffer IS
-	GENERIC ( n : integer := 16);
-	PORT(	D : IN std_logic_vector(n-1 downto 0);
-		EN : IN std_logic;
-		F : OUT std_logic_vector(n-1 downto 0));
-	END COMPONENT;
+signal Zeros : STD_LOGIC_VECTOR(8 DOWNTO 0);
+signal NewAddress: STD_LOGIC_VECTOR(12 DOWNTO 0);
+signal upAddress: STD_LOGIC_VECTOR(12 DOWNTO 0);
+signal BiasEnable : std_logic;
+signal triEnable : std_logic;
 
-	COMPONENT my_nadder IS
-	Generic ( n : integer := 16);
-	PORT(a, b : in std_logic_vector(n-1 downto 0);
-		cin : in std_logic;
-		s : out std_logic_vector(n-1 downto 0);
-		cout : out std_logic);
-	END COMPONENT;
-		
 BEGIN
 
-	B0 : nBitRegister port map(BIAS(15  DOWNTO   0),CLK,RST,STATE,outBias0);
-	B1 : nBitRegister port map(BIAS(31  DOWNTO  16),CLK,RST,STATE,outBias1);
-	B2 : nBitRegister port map(BIAS(47  DOWNTO  32),CLK,RST,STATE,outBias2);
-	B3 : nBitRegister port map(BIAS(63  DOWNTO  48),CLK,RST,STATE,outBias3);
-	B4 : nBitRegister port map(BIAS(79  DOWNTO  64),CLK,RST,STATE,outBias4);
-	B5 : nBitRegister port map(BIAS(95  DOWNTO  80),CLK,RST,STATE,outBias5);
-	B6 : nBitRegister port map(BIAS(111 DOWNTO  96),CLK,RST,STATE,outBias6);
-	B7 : nBitRegister port map(BIAS(127 DOWNTO 112),CLK,RST,STATE,outBias7);
+Zeros <= (others=>'0') ;
+NewAddress <= Zeros&LayerInfo( 4 downto 1 );    -- get number of filters from layer info 
+BiasEnable <= '1' when (current_state=conv_calc_ReadImg_ReadBias and ACKF = '1' )  else '0';
+triEnable <= '1' when (current_state=conv_calc_ReadImg_ReadBias )  else '0';
+	B0 : entity work.nBitRegister port map(BIAS(15  DOWNTO   0),CLK,RST,BiasEnable,outBias0);
+	B1 : entity work.nBitRegister port map(BIAS(31  DOWNTO  16),CLK,RST,BiasEnable,outBias1);
+	B2 : entity work.nBitRegister port map(BIAS(47  DOWNTO  32),CLK,RST,BiasEnable,outBias2);
+	B3 : entity work.nBitRegister port map(BIAS(63  DOWNTO  48),CLK,RST,BiasEnable,outBias3);
+	B4 : entity work.nBitRegister port map(BIAS(79  DOWNTO  64),CLK,RST,BiasEnable,outBias4);
+	B5 : entity work.nBitRegister port map(BIAS(95  DOWNTO  80),CLK,RST,BiasEnable,outBias5);
+	B6 : entity work.nBitRegister port map(BIAS(111 DOWNTO  96),CLK,RST,BiasEnable,outBias6);
+	B7 : entity work.nBitRegister port map(BIAS(127 DOWNTO 112),CLK,RST,BiasEnable,outBias7);
 
-	tsb0 : triStateBuffer port map(FilterAddress,STATE,DMAAddress);
+	tsb0 : entity work.triStateBuffer generic map (13) port map(FilterAddress,triEnable,DMAAddressToFilter);
 	
-	adder0: my_nadder port map(FilterAddress,NOofFilters,'0',UpdatedAddress);
+	adder0: entity work.my_nadder generic map (13) port map(FilterAddress,NewAddress,'0',upAddress);
+
+	TriStateAdd : entity work.triStateBuffer generic map (13) port map(upAddress,triEnable,UpdatedAddress);
+	
 
 END DATA_FLOW;

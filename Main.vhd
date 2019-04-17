@@ -30,7 +30,6 @@ signal TriStateCounterEN:std_logic;
 signal TriStateCounterOUT: std_logic_vector(12 downto 0);
 -------ImgAddACKTri signals-----------
 signal ImgAddACKTriEN:std_logic;
-signal ImgAddACKTriOUT: std_logic_vector(12 downto 0);
 signal zero: std_logic_vector(11 downto 0);
 signal ImgAddACKTriIN: std_logic_vector(12 downto 0);
 -------Filter memory ------
@@ -58,17 +57,34 @@ signal ImgWidthOut:std_logic_vector(15 downto 0);
 signal WidthSquareOut :  std_logic_vector(5 downto 0);
 signal CounterWidthSquare :  std_logic_vector(1 downto 0);
 signal ACKWidth : std_logic;
+----------------------------------
+signal Bias0: STD_LOGIC_VECTOR(15 DOWNTO 0);
+signal Bias1: STD_LOGIC_VECTOR(15 DOWNTO 0);
+signal Bias2: STD_LOGIC_VECTOR(15 DOWNTO 0);
+signal Bias3: STD_LOGIC_VECTOR(15 DOWNTO 0);
+signal Bias4: STD_LOGIC_VECTOR(15 DOWNTO 0);
+signal Bias5: STD_LOGIC_VECTOR(15 DOWNTO 0);
+signal Bias6: STD_LOGIC_VECTOR(15 DOWNTO 0);
+signal Bias7: STD_LOGIC_VECTOR(15 DOWNTO 0);
+------------------------------------------
+signal IndicatorF : std_logic_vector(0 downto 0);
+signal Filter2 : STD_LOGIC_VECTOR(399 DOWNTO 0);
+signal Filter1 : STD_LOGIC_VECTOR(399 DOWNTO 0);
 
 
 BEGIN
 ---conditions---
-FilterAddressEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )) else '0';
-TriStateCounterEN <= '1' when (current_state = RI and ACKF = '1' ) else '0';
+FilterAddressEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )
+ or (current_state = conv_calc_ReadImg_ReadBias  and ACKF = '1' )
+or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  ) else '0';
+
+TriStateCounterEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )) else '0';
 ImgAddRegEN <= '1' when (current_state = RL and ACKI = '1' ) else '0';
 ImgAddACKTriEN<='1' when (current_state = RL ) else '0';
 zero <= (others=>'0');
 ImgAddACKTriIN <= zero&ACKI;
 -----------------
+
 
 
 --register decliration---
@@ -92,6 +108,15 @@ ReadLayerInfo:entity work.ReadLayerInfo generic map (n=>13) port map (DataF(15 d
 
 ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,LayerInfoOut,clk,rst,current_state , ACKWidth);
 
+RBias:entity work.ReadBias port map (current_state,DataF,FilterAddressOut,AddressF,FilterAddressIN,clk,rst,LayerInfoOut,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , ACKF);
+
+ 
+Rfilter:entity work.ReadFilter port map (current_state,DataF ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , '0' , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
+
+
+
+
+
 --------------------------
 
 
@@ -105,10 +130,12 @@ BEGIN
 			next_state<= RL;
 			end if ;
 		when RL=>
-			  if  ACKF = '1' and (clk'EVENT AND clk = '0')  then
-				if DataF(15) = '1' then  
-					next_state<= conv_calc_ReadImg_ReadBias;
-				else 	next_state<= Pool_Cal_ReadImg;
+			  if (clk'EVENT AND clk = '0')  then
+				if ACKF = '1' then
+					if DataF(15) = '0' then  
+						next_state<= conv_calc_ReadImg_ReadBias;
+					else 	next_state<= Pool_Cal_ReadImg;
+					end if;
 				end if;
 			end if;
 
@@ -119,7 +146,11 @@ BEGIN
 		
 		when Pool_Read_Img=>
 		when conv_calc_ReadImg_ReadBias=>
+			if (ACKF'EVENT AND ACKF = '1') then 
+			   next_state<=conv_ReadImg_ReadFilter;
+			end if ;
 		when conv_ReadImg_ReadFilter=>
+			
 		when conv_ReadImg=>
 		when CONV=>
 	
@@ -142,7 +173,7 @@ end process;
 -- end of circuit--
 
 --output of process circuit--
-output_proc : process(current_state,ACKF,ACKI)
+output_proc : process(current_state,IndicatorF)
 begin
 	case current_state is
 		when RI=>
@@ -164,9 +195,24 @@ begin
 
 		when Pool_Read_Img=>
 		when conv_calc_ReadImg_ReadBias=>
+			ReadF<='1';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
+
 		when conv_ReadImg_ReadFilter=>
+		      --ReadF<='1';
+			ReadF<=not IndicatorF(0);
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
 		when conv_ReadImg=>
 		when  CONV=>
+			ReadF<=not IndicatorF(0);
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
+
 	end case;
 end process;
 

@@ -18,6 +18,7 @@ architecture archRAM of RAM is
     type ram_type is array( 0 to 5000) of std_logic_vector(15 downto 0);
     signal ram: ram_type;
     signal mfc_m:std_logic;
+    signal CLKEvent: std_logic;
     signal cReset,cEnable:std_logic;
     signal cOutput:std_logic_vector(3 downto 0);
     component Counter is
@@ -42,7 +43,9 @@ begin
 
     -- MFC appears one clock after 8th clocks
     MFC <= mfc_m;
-    mfc_m <= '1' when (cOutput = "0010" and CLK'event and CLK = '1')
+    --CLKEvent<= '1' when (CLK'event and CLK = '1')  else '0';
+    
+    mfc_m <= '1' when (cOutput = "0010" and(CLK'event and CLK = '1'))
     else '0' when   (CLK'event and CLK = '1');
 
     -- reset the counter when comes to 8 or a signal read or write
@@ -64,6 +67,8 @@ begin
     			adds := i + to_integer(unsigned(address));
                 data(j downto k) <= ram(adds);
 		    end loop;
+
+--- we need to output z when we dont have data
         end if ;
     end process;
 end archRAM ;
