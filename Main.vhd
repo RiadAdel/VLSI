@@ -180,6 +180,8 @@ BEGIN
 			end if ;
 
 		when CONV=>
+		
+		when SAVE=>
 	
 			
 	
@@ -249,6 +251,11 @@ begin
 			ReadI<=not IndicatorI(0);
 			WriteF<='0';
 			WriteI<='0';
+		when SAVE=>
+			ReadF<='0';
+			ReadI<='0';
+			WriteF<='0';
+			WriteI<='1';
 
 	end case;
 end process;
