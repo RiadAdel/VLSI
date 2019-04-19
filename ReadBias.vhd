@@ -26,7 +26,7 @@ signal triEnable : std_logic;
 BEGIN
 
 Zeros <= (others=>'0') ;
-NewAddress <= Zeros&LayerInfo( 4 downto 1 );    -- get number of filters from layer info 
+NewAddress <= Zeros&LayerInfo( 3 downto 0 );    -- get number of filters from layer info 
 BiasEnable <= '1' when (current_state=conv_calc_ReadImg_ReadBias and ACKF = '1' )  else '0';
 triEnable <= '1' when (current_state=conv_calc_ReadImg_ReadBias )  else '0';
 	B0 : entity work.nBitRegister port map(BIAS(15  DOWNTO   0),CLK,RST,BiasEnable,outBias0);

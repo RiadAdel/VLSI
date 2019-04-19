@@ -14,7 +14,7 @@ BEGIN
 	BEGIN
 		IF RST='1' THEN 
 			Q <= (OTHERS=>'0');
-		ELSIF (CLK'EVENT AND CLK = '1') THEN
+		ELSIF (CLK'EVENT AND CLK = '0') THEN
 			IF EN = '1' THEN 
 				Q<=D;
 			END IF;
