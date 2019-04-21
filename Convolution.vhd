@@ -7,7 +7,7 @@ entity Convolution is
   port (
     STATE : in state;
     CLK,RST ,QImgStat:in std_logic; 
-    ACKC : out std_logic;
+    ACK : out std_logic;
     LayerInfo : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
     ImgAddress : in std_logic_vector(12 downto 0);
     OutputImg0 : in std_logic_vector(79 downto 0 );
@@ -41,7 +41,23 @@ signal pool :  STD_LOGIC_VECTOR(15 DOWNTO 0);
 
 signal MultiplierOut16 : STD_LOGIC_VECTOR(399 DOWNTO 0);
 
+signal CounterOut : std_logic_vector(1 downto 0);
+signal CountereEN : std_logic;
+signal ACKC : std_logic;
+signal CountereRST : std_logic;
+
+
+
 Begin
+
+CountereEN <= '1' when (STATE = CONV ) and (ACKC = '0')      else '0';
+CountereRST <= '1' when (rst = '1') or (CounterOut = "10")  else '0' ;
+
+ACKC <= '1' when( CounterOut = "01") and (CLK'event and CLK = '1') 
+else '0' when   (CLK'event and CLK = '1'); 
+ACK <=ACKC;
+
+
 
 ImgPixels<= OutputImg4&OutputImg3&OutputImg2&OutputImg1&OutputImg0;
 Filter<= outFilter0 when QImgStat='0' else outFilter1;
@@ -61,7 +77,7 @@ end generate ;
 ---- we can make celling for positive numbers
 loop2: FOR i in 0 to 24 Generate
 
-MultiplierOut16((16*(i+1)-1) downto 16*i) <= MultiplierOut( ((16*(i+1)-1)+9)   downto  ((16*i) + 9));
+MultiplierOut16((16*(i+1)-1) downto 16*i) <= MultiplierOut( ((32*(i+1)-1)-7)   downto  ((32*i) + 9));
 
 
 end generate ;
@@ -113,13 +129,19 @@ FinalConv<= Final55 when LayerInfo(14) = '1' else AddOut33;
 Relu<= FinalConv when FinalConv(15)='0' else (others=>'0');
 
 
----- we need to make the shift regirster 
----- we need to make counter so we know we finished so that we can beging shifting 
------ another one to know when we finish this state
-
-
+pool<= FinalConv(15)&FinalConv(15)&FinalConv(15)&FinalConv(15 downto 3)  when LayerInfo(14) = '0' else FinalConv(15)&FinalConv(15)&FinalConv(15)&FinalConv(15)&FinalConv(15)&FinalConv(15 downto 5 ) ; 
 
 ConvOuput<= Relu when LayerInfo(15)='0' else pool;
+
+
+
+EndCounter:entity work.Counter generic map (n=>2) port map ( CountereEN ,CountereRST , clk , '0' ,CounterOut , "00" );
+
+
+
+
+
+
 
 
 
