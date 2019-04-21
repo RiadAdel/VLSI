@@ -34,9 +34,6 @@ ARCHITECTURE archCHECKS OF Checks IS
 
 BEGIN
 	
-	--CNHRST <= '1' when ((RST = '1') or ((State = stateCHECK) and (k = '0'))) else '0';
-	counterNoHeight0: Counter generic map(4) port map('1',CNHRST,State,'0',CNHoutput,"0001");
-	
 	counterNoDepth0: Counter generic map(4) port map('1',RST,State,'0',CNDoutput,"0001");
 	D <= CNDoutput xor noOfLayers;
 
@@ -45,6 +42,6 @@ BEGIN
 
 	--addCounterRST <= '1' when ((State = stateCHECK) or (RST = 1)) else '0';
 	Address0: Counter generic map(4) port map('1',addCounterRST,CLK,'0',cOutput,"0001");
-	newSliceReg0: nBitRegister port map(BIAS(15  DOWNTO   0),CLK,RST,STATE,outBias0);
+	
 
 END archCHECKS;
