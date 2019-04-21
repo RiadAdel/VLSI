@@ -36,14 +36,16 @@ signal ImgAddACKTriIN: std_logic_vector(12 downto 0);
 signal WriteF:std_logic;
 signal ReadF:std_logic;
 signal AddressF: std_logic_vector(12 downto 0);
-signal DataF: std_logic_vector( 399 downto 0 );
+signal DataFIn: std_logic_vector( 15 downto 0 );
+signal DataFOut: std_logic_vector( 399 downto 0 );
 
 signal ACKF:std_logic;
 -------Img memory -------
 signal WriteI:std_logic;
 signal ReadI:std_logic;
 signal AddressI:std_logic_vector(12 downto 0);
-signal DataI: std_logic_vector( 447 downto 0 );
+signal DataIIn: std_logic_vector( 15 downto 0 );
+signal DataIOut: std_logic_vector( 447 downto 0 );
 
 
 signal ACKI:std_logic;
@@ -83,6 +85,10 @@ signal OutputImg4 :  std_logic_vector(447 downto 0 );
 signal OutputImg5 :  std_logic_vector(447 downto 0 );
 signal ImgRegEN : std_logic_vector(5 downto 0);
 
+--------------------------------------------------
+signal ACKC : std_logic;
+signal ConvOuput : std_logic_vector(15 downto 0); 
+
 BEGIN
 ---conditions---
 FilterAddressEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )
@@ -102,13 +108,15 @@ ImgAddACKTriIN <= zero&ACKI;
 
 
 
---register decliration---
 
 
-FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataF , ACKF ,counterOutF );
-ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataI  ,ACKI ,counterOutI);
 
-ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataF(15 downto 0) , NoOfLayers , AddressF );
+
+
+FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataFIn , DataFOut , ACKF ,counterOutF );
+ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataIIn , DataIOut ,ACKI ,counterOutI);
+
+ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataFOut(15 downto 0) , NoOfLayers , AddressF );
 
 
 FilterAddress:entity work.nBitRegister generic map (n=>13) port map ( FilterAddressIN , clk , rst ,FilterAddressEN , FilterAddressOut );
@@ -118,18 +126,22 @@ FilterAddressAdder:entity work.my_nadder generic map (n=>13) port map ( FilterAd
 ImgAddReg:entity work.nBitRegister generic map (n=>13) port map ( ImgAddRegIN , clk , rst ,ImgAddRegEN , ImgAddRegOut );
 ImgAddACKTri:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddACKTriIN, ImgAddACKTriEN, ImgAddRegIN );
 
-ReadLayerInfo:entity work.ReadLayerInfo generic map (n=>13) port map (DataF(15 downto 0 ),DataI(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
+ReadLayerInfo:entity work.ReadLayerInfo generic map (n=>13) port map (DataFOut(15 downto 0 ),DataIOut(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
 
 
 ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,LayerInfoOut,clk,rst,current_state , ACKWidth , ACKI ,Wmin1);
 
-RBias:entity work.ReadBias port map (current_state,DataF,FilterAddressOut,AddressF,FilterAddressIN,clk,rst,LayerInfoOut,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , ACKF);
+RBias:entity work.ReadBias port map (current_state,DataFOut,FilterAddressOut,AddressF,FilterAddressIN,clk,rst,LayerInfoOut,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , ACKF);
 
  
-Rfilter:entity work.ReadFilter port map (current_state,DataF ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , '0' , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
+Rfilter:entity work.ReadFilter port map (current_state,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , '0' , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
 
 
-RImg : entity work.ReadImage port map (current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataI ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN);
+RImg : entity work.ReadImage port map (current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataIOut ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN);
+
+Sconv : entity work.Convolution port map (current_state , clk , rst ,'0', ACKC ,LayerInfoOut, ImgAddRegOut ,OutputImg0(79 downto 0) , OutputImg1(79 downto 0) , OutputImg2(79 downto 0),OutputImg3(79 downto 0),OutputImg4(79 downto 0),Filter1 , Filter2,ConvOuput);
+
+
 
 
 --------------------------
@@ -147,7 +159,7 @@ BEGIN
 		when RL=>
 			  if (clk'EVENT AND clk = '0')  then
 				if ACKF = '1' then
-					if DataF(15) = '0' then  
+					if DataFOut(15) = '0' then  
 						next_state<= conv_calc_ReadImg_ReadBias;
 					else 	next_state<= Pool_Cal_ReadImg;
 					end if;
