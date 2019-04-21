@@ -1,0 +1,42 @@
+vsim -gui work.depthzero
+# vsim -gui work.depthzero 
+# Start time: 14:54:44 on Apr 21,2019
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.depthzero(depthzeroarch)
+# Loading work.mux7(mux7arch)
+# Loading work.my_nadder(a_my_nadder)
+# Loading work.my_adder(a_my_adder)
+# Loading work.tristatebuffer(tribuffer)
+add wave -position insertpoint  \
+sim:/depthzero/fromOutReg \
+sim:/depthzero/bias1 \
+sim:/depthzero/bias2 \
+sim:/depthzero/bias3 \
+sim:/depthzero/bias4 \
+sim:/depthzero/bias5 \
+sim:/depthzero/bias6 \
+sim:/depthzero/bias7 \
+sim:/depthzero/bias8 \
+sim:/depthzero/counterNumber \
+sim:/depthzero/Depth \
+sim:/depthzero/state \
+sim:/depthzero/output
+# ** Warning: (vsim-WLF-5000) WLF file currently in use: vsim.wlf
+#           File in use by: soon-  Hostname: DESKTOP-2LT0FDT  ProcessID: 11472
+#           Attempting to use alternate WLF file "./wlftndaben".
+# ** Warning: (vsim-WLF-5001) Could not open WLF file: vsim.wlf
+#           Using alternate file: ./wlftndaben
+force -freeze sim:/depthzero/fromOutReg 16#2 0
+force -freeze sim:/depthzero/bias1 16#3 0
+force -freeze sim:/depthzero/bias7 16#4 0
+force -freeze sim:/depthzero/counterNumber 110 0
+force -freeze sim:/depthzero/state 1 0
+run
+force -freeze sim:/depthzero/Depth 000 0
+run
+force -freeze sim:/depthzero/counterNumber 000 0
+run
+force -freeze sim:/depthzero/state 0 0
+run

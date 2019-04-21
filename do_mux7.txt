@@ -1,0 +1,48 @@
+vsim -gui work.mux7
+# vsim -gui work.mux7 
+# Start time: 14:21:09 on Apr 21,2019
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.mux7(mux7arch)
+add wave -position insertpoint  \
+sim:/mux7/a1 \
+sim:/mux7/a2 \
+sim:/mux7/a3 \
+sim:/mux7/a4 \
+sim:/mux7/a5 \
+sim:/mux7/a6 \
+sim:/mux7/a7 \
+sim:/mux7/a8 \
+sim:/mux7/sel \
+sim:/mux7/output
+# ** Warning: (vsim-WLF-5000) WLF file currently in use: vsim.wlf
+#           File in use by: soon-  Hostname: DESKTOP-2LT0FDT  ProcessID: 11472
+#           Attempting to use alternate WLF file "./wlft29amin".
+# ** Warning: (vsim-WLF-5001) Could not open WLF file: vsim.wlf
+#           Using alternate file: ./wlft29amin
+force -freeze sim:/mux7/a1 16#0 0
+force -freeze sim:/mux7/a2 16#1 0
+force -freeze sim:/mux7/a3 16#2 0
+force -freeze sim:/mux7/a4 16# 0
+force -freeze sim:/mux7/a4 16#3 0
+force -freeze sim:/mux7/a5 16#4 0
+force -freeze sim:/mux7/a6 16#5 0
+force -freeze sim:/mux7/a7 16#6 0
+force -freeze sim:/mux7/a8 16#7 0
+force -freeze sim:/mux7/sel 000 0
+run
+force -freeze sim:/mux7/sel 001 0
+run
+force -freeze sim:/mux7/sel 010 0
+run
+force -freeze sim:/mux7/sel 011 0
+run
+force -freeze sim:/mux7/sel 100 0
+run
+force -freeze sim:/mux7/sel 101 0
+run
+force -freeze sim:/mux7/sel 110 0
+run
+force -freeze sim:/mux7/sel 111 0
+run
