@@ -9,7 +9,8 @@ generic(X: integer := 28);
     reset:in std_logic;
     CLK,W,R:in std_logic;
     address:in std_logic_vector(12 downto 0);
-    data:inout std_logic_vector(((X*16)-1) downto 0);
+    dataIn:in std_logic_vector( 15 downto 0);
+    dataOut:out std_logic_vector(((X*16)-1) downto 0);
     MFC:out std_logic;
     counterOut:out std_logic_vector(3 downto 0)
   ) ;
@@ -59,13 +60,13 @@ begin
         k := -16;
         j := -1;
         if  (cOutput = "0011" and W = '1')then
-            ram(to_integer(unsigned(address))) <= data(15 downto 0);
+            ram(to_integer(unsigned(address))) <= dataIn;
         elsif  (cOutput = "0011" and R = '1')then
             loop1: for i in 0 to X-1 loop
                 k := k + 16;
                 j := j + 16;
     			adds := i + to_integer(unsigned(address));
-                data(j downto k) <= ram(adds);
+                dataOut(j downto k) <= ram(adds);
 		    end loop;
 
 --- we need to output z when we dont have data
