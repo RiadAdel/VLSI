@@ -1,0 +1,33 @@
+vsim -gui work.depthnotzero
+# vsim -gui work.depthnotzero 
+# Start time: 15:41:36 on Apr 21,2019
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.constants
+# Loading work.depthnotzero(depthnotzeroarch)
+# Loading work.my_nadder(a_my_nadder)
+# Loading work.my_adder(a_my_adder)
+# Loading work.tristatebuffer(tribuffer)
+add wave -position insertpoint  \
+sim:/depthnotzero/fromOutDMA \
+sim:/depthnotzero/fromOutReg \
+sim:/depthnotzero/Depth \
+sim:/depthnotzero/state \
+sim:/depthnotzero/output
+# ** Warning: (vsim-WLF-5000) WLF file currently in use: vsim.wlf
+#           File in use by: soon-  Hostname: DESKTOP-2LT0FDT  ProcessID: 11472
+#           Attempting to use alternate WLF file "./wlft8iagmd".
+# ** Warning: (vsim-WLF-5001) Could not open WLF file: vsim.wlf
+#           Using alternate file: ./wlft8iagmd
+force -freeze sim:/depthnotzero/state SAVE 0
+force -freeze sim:/depthnotzero/fromOutDMA 16#2 0
+force -freeze sim:/depthnotzero/fromOutReg 16#5 0
+force -freeze sim:/depthnotzero/Depth 000 0
+run
+run
+force -freeze sim:/depthnotzero/Depth 001 0
+run
+run
+force -freeze sim:/depthnotzero/state RI 0
+run
