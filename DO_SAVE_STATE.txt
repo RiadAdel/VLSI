@@ -1,0 +1,68 @@
+vsim -gui work.savestate
+# vsim -gui work.savestate 
+# Start time: 21:44:04 on Apr 21,2019
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.constants
+# Loading work.savestate(savestatearch)
+# Loading work.addresscounter(addresscounterarch)
+# Loading ieee.numeric_std(body)
+# Loading work.counter(counterimplementation)
+# Loading work.my_nadder(a_my_nadder)
+# Loading work.my_adder(a_my_adder)
+# Loading work.tristatebuffer(tribuffer)
+# Loading work.depthnotzero(depthnotzeroarch)
+# Loading work.depthzero(depthzeroarch)
+# Loading work.mux7(mux7arch)
+add wave -position insertpoint  \
+sim:/savestate/DMAOutput \
+sim:/savestate/RegisterOutput \
+sim:/savestate/bias1 \
+sim:/savestate/bias2 \
+sim:/savestate/bias3 \
+sim:/savestate/bias4 \
+sim:/savestate/bias5 \
+sim:/savestate/bias6 \
+sim:/savestate/bias7 \
+sim:/savestate/bias8 \
+sim:/savestate/Depth \
+sim:/savestate/NumberOfFiltersCounter \
+sim:/savestate/resetCounter \
+sim:/savestate/stateinput \
+sim:/savestate/outputCounter \
+sim:/savestate/output \
+sim:/savestate/outputMux \
+sim:/savestate/outputAdder \
+sim:/savestate/cout \
+sim:/savestate/Enable
+# ** Warning: (vsim-WLF-5000) WLF file currently in use: vsim.wlf
+#           File in use by: soon-  Hostname: DESKTOP-2LT0FDT  ProcessID: 11472
+#           Attempting to use alternate WLF file "./wlftv30dtm".
+# ** Warning: (vsim-WLF-5001) Could not open WLF file: vsim.wlf
+#           Using alternate file: ./wlftv30dtm
+force -freeze sim:/savestate/resetCounter 1 0
+run
+force -freeze sim:/savestate/resetCounter 0 0
+run
+force -freeze sim:/savestate/stateinput SAVE 0
+run
+force -freeze sim:/savestate/stateinput RI 0
+run
+run
+force -freeze sim:/savestate/stateinput SAVE 0
+run
+force -freeze sim:/savestate/DMAOutput 16#0 0
+force -freeze sim:/savestate/RegisterOutput 16#2 0
+force -freeze sim:/savestate/DMAOutput 16#1 0
+force -freeze sim:/savestate/Depth 000 0
+force -freeze sim:/savestate/bias5 16#5 0
+force -freeze sim:/savestate/NumberOfFiltersCounter 101 0
+force -freeze sim:/savestate/bias6 16#6 0
+run
+force -freeze sim:/savestate/Depth 111 0
+run
+force -freeze sim:/savestate/stateinput RI 0
+run
+force -freeze sim:/savestate/stateinput SAVE 0
+run

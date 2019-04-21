@@ -1,0 +1,37 @@
+vsim -gui work.addresscounter
+# vsim -gui work.addresscounter 
+# Start time: 17:58:14 on Apr 21,2019
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.constants
+# Loading work.addresscounter(addresscounterarch)
+# Loading ieee.numeric_std(body)
+# Loading work.counter(counterimplementation)
+# Loading work.my_nadder(a_my_nadder)
+# Loading work.my_adder(a_my_adder)
+# Loading work.tristatebuffer(tribuffer)
+add wave -position insertpoint  \
+sim:/addresscounter/reset \
+sim:/addresscounter/state \
+sim:/addresscounter/outputAddress \
+sim:/addresscounter/outputCounter \
+sim:/addresscounter/input \
+sim:/addresscounter/enable
+# ** Warning: (vsim-WLF-5000) WLF file currently in use: vsim.wlf
+#           File in use by: soon-  Hostname: DESKTOP-2LT0FDT  ProcessID: 11472
+#           Attempting to use alternate WLF file "./wlftj6y3fs".
+# ** Warning: (vsim-WLF-5001) Could not open WLF file: vsim.wlf
+#           Using alternate file: ./wlftj6y3fs
+force -freeze sim:/addresscounter/reset 1 0
+run
+force -freeze sim:/addresscounter/reset 0 0
+force -freeze sim:/addresscounter/state SAVE 0
+run
+run
+run
+run
+force -freeze sim:/addresscounter/state RI 0
+run
+force -freeze sim:/addresscounter/state SAVE 0
+run
