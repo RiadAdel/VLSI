@@ -80,9 +80,18 @@ architecture archRI of ReadImage is
 
 
 	TriStateAddToDma : entity work.triStateBuffer generic map (13) port map(ImgAddress,TriAddToDMaEn,ImgAddToDma);
-
-
-    	DFFCLK <= '1' when ((current_state = CONV) AND (ACK='1') and (CLK'event and CLK='1')  ) else '0';
+-- error done
+	process (current_state,ACK,clk)
+	begin
+	if current_state = CONV AND ACK='1' then
+		if CLK'event and CLK = '1' then
+			DFFCLK <= '1';
+		end if;
+	else
+		DFFCLK <= '0';
+	end if;
+	end process;
+  --DFFCLK <= '1' when ((current_state = CONV) AND (ACK='1') and (CLK'event and CLK='1')  ) else '0';
 	Qbar <= NOT(IndicatorImage);
 	
 	IndRst<= '1' when current_state = SHUP  or  RST = '1' else '0';

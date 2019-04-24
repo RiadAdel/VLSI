@@ -35,9 +35,19 @@ WSquareEN <= '1' when (current_state = Pool_Cal_ReadImg and ACKW ='1'  ) or (cur
 CountereEN <= '1' when ((current_state = Pool_Cal_ReadImg ) or (current_state = conv_calc_ReadImg_ReadBias )) and (ACKW = '0')      else '0';
 CountereRST <= '1' when (rst = '1') or (CounterOut = "10") or ( ((current_state = Pool_Cal_ReadImg ) or (current_state = conv_calc_ReadImg_ReadBias )) and  ACKI ='1' ) else '0' ;
 
-
-ACKW <= '1' when( CounterOut = "01") and (CLK'event and CLK = '1') 
-else '0' when   (CLK'event and CLK = '1'); 
+-- error done
+process (clk,CounterOut)
+	begin
+	if CounterOut = "01" then
+		if CLK'event and CLK = '1' then
+			ACKW <= '1';
+		end if;
+	elsif CLK'event and CLK = '1' then
+		ACKW <= '0';
+	end if;
+end process;
+--ACKW <= '1' when( CounterOut = "01") and (CLK'event and CLK = '1') 
+--else '0' when   (CLK'event and CLK = '1'); 
 ACK <=ACKW;
 
 CounOut <=CounterOut;

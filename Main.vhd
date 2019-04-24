@@ -4,7 +4,8 @@ use work.constants.all;
 
 
 ENTITY Main IS
-	PORT(rst , clk: IN std_logic);
+	PORT(rst , clk , dmaStartSignal: IN std_logic;
+		 done:out std_logic);
 END ENTITY Main;
 
 ARCHITECTURE vlsi OF Main IS	
@@ -146,10 +147,7 @@ B<= '0' when ShiftLeftCounterOutput ="11100"  else '1';
 FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataFIn , DataFOut , ACKF ,counterOutF );
 
 ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataIIn , DataIOut ,ACKI ,counterOutI);
-
-
-
-
+--ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,,,);
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataFOut(15 downto 0) , NoOfLayers , AddressF );
 
@@ -160,8 +158,8 @@ FilterAddressAdder:entity work.my_nadder generic map (n=>13) port map ( FilterAd
 
 ImgAddReg:entity work.nBitRegister generic map (n=>13) port map ( ImgAddRegIN , clk , rst ,ImgAddRegEN , ImgAddRegOut );
 ImgAddACKTri:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddACKTriIN, ImgAddACKTriEN, ImgAddRegIN );
-
-ReadLayerInfo:entity work.ReadLayerInfo generic map (n=>13) port map (DataFOut(15 downto 0 ),DataIOut(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
+--error done
+ReadLayerInfo:entity work.ReadLayerInfo port map (DataFOut(15 downto 0 ),DataIOut(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
 
 
 ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,LayerInfoOut,clk,rst,current_state , ACKWidth , ACKI ,Wmin1);
@@ -212,10 +210,12 @@ BEGIN
 			if (ACKI'EVENT AND ACKI = '1') then 
 			next_state<= Pool_Read_Img;
 			end if ;
-		
+		-- error done
 		when Pool_Read_Img=>
-			if (ACKI'EVENT AND ACKI = '1') and (ImgCounterOuput = "100") then 
-			next_state<= CONV;
+			if  (ImgCounterOuput = "100") then 
+					if (ACKI'EVENT AND ACKI = '1') then
+						next_state<= CONV;
+					end if ;
 			end if ;
 
 		when conv_calc_ReadImg_ReadBias=>
@@ -226,21 +226,24 @@ BEGIN
 			if (ACKF'EVENT AND ACKF = '1') then 
 			   next_state<=conv_ReadImg;
 			end if ;
-			
+		-- error done
 		when conv_ReadImg=>
-
-			if (ACKI'EVENT AND ACKI = '1') and (ImgCounterOuput = "100") then 
-			   next_state<=CONV;
+			if (ImgCounterOuput = "100") then 
+						if (ACKI'EVENT AND ACKI = '1') then
+							next_state<=CONV;
+						end if ;
 			end if ;
 
 		when CONV=>
 			if (ACKC'EVENT AND ACKC = '1') then   --- will change before i read img or filter
 			   next_state<=SAVE;
 			end if ;
-		
+		-- error done
 		when SAVE=>
-			if (ACKI'EVENT AND ACKI = '1') and (WriteI = '1') then   --- will change before i read img or filter
-			   next_state<=IMGSTAT;
+			if(WriteI = '1') then   --- will change before i read img or filter
+				if (ACKI'EVENT AND ACKI = '1') then
+					next_state<=IMGSTAT;
+				end if ;
 			end if ;
 			
 		
@@ -313,29 +316,35 @@ begin
 			ReadI<='0';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
+
 		when RL=>
 			ReadF<='1';
 			ReadI<= '1';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
 
 		when Pool_Cal_ReadImg=>
 			ReadF<='0';
 			ReadI<= '1';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
 
 		when Pool_Read_Img=>
 			ReadF<='0';
 			ReadI<= '1';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
 
 		when conv_calc_ReadImg_ReadBias=>
 			ReadF<='1';
 			ReadI<= '1';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
 
 		when conv_ReadImg_ReadFilter=>
 		        ReadF<='1';
@@ -343,46 +352,56 @@ begin
 			ReadI<= '1';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
+
 		when conv_ReadImg=>
 		        ReadF<='0';
 			ReadI<= '1';
 			WriteF<='0';
 			WriteI<='0';
-		
+			done <= '0';
+
 		when  CONV=>
 			ReadF<=not IndicatorF(0);
 			ReadI<=not IndicatorI(0);
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
+
 		when SAVE=>
 			ReadF<='0';
 			ReadI<=ReadSave;
 			WriteF<='0';
 			WriteI<=WriteSave;
+			done <= '0';
 
 		when IMGSTAT=>
 			ReadF<='0';
 			ReadI<= '0';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
 
 		when SHLEFT=>
 			ReadF<='0';
 			ReadI<= '0';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
 
 		when SHUP=>
 			ReadF<='0';
 			ReadI<= '0';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
 
 		when CHECKS=>
 			ReadF<='0';
 			ReadI<= '0';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '1';
 
 	end case;
 end process;

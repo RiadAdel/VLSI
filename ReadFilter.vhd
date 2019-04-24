@@ -32,8 +32,18 @@ BEGIN
 
 	F0 : entity work.nBitRegister generic map (400) port map(FILTER,CLK,RST,filter1EN,outFilter0);
 	F1 : entity work.nBitRegister generic map (400) port map(FILTER,CLK,RST,filter2EN,outFilter1);
-	
-	DFFCLK <= '1' when (current_state = CONV AND ACKF='1' and (CLK'event and CLK='1')  ) else '0';
+	-- error done
+	process (current_state,ACKF,clk)
+	begin
+	if current_state = CONV AND ACKF='1' then
+		if CLK'event and CLK = '1' then
+			DFFCLK <= '1';
+		end if;
+	else
+		DFFCLK <= '0';
+	end if;
+	end process;
+	-- DFFCLK <= '1' when (current_state = CONV AND ACKF='1' and (CLK'event and CLK='1')  ) else '0';
 	Qbar <= NOT(IndicatorF);
 	
 	IndRst<= '1' when current_state = SHLEFT  or  RST = '1' else '0';

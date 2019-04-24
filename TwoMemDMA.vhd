@@ -11,7 +11,6 @@ entity memoryDMA is
 		switcherEN:in std_logic;		     -- exchange input ram with output ram
 		ramSelector:in std_logic;                    -- -0 for input ram(i want to read from) ,1 for output ram(i want to save in)
 		readEn,writeEn,CLK: in std_logic;	
-		
 		Normal: inout std_logic;		     --just set it to 0 when start
 		MFC:out std_logic;		
 		counterOut:out std_logic_vector(3 downto 0);
