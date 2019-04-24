@@ -6,8 +6,8 @@ ENTITY saveState IS
 	
 	PORT(	DMAOutput,RegisterOutput : IN std_logic_vector(15 downto 0);
 		bias1,bias2,bias3,bias4,bias5,bias6,bias7,bias8: In std_logic_vector(15 downto 0);
-		Depth,NumberOfFiltersCounter: IN std_logic_vector(2 downto 0); --selector of the mux 
-		resetCounter: IN std_logic;
+		Depth,NumberOfFiltersCounter: IN std_logic_vector(3 downto 0); --selector of the mux 
+		rst: IN std_logic;
 		stateinput: IN state;
 		clk : in std_logic;
 		outputCounterToDma: out std_logic_vector(12 downto 0);
@@ -24,7 +24,7 @@ component depthZero IS
 	
 	PORT(	fromOutReg : IN std_logic_vector(15 downto 0);
 		bias1,bias2,bias3,bias4,bias5,bias6,bias7,bias8: In std_logic_vector(15 downto 0);
-		counterNumber,Depth: IN std_logic_vector(2 downto 0); --selector of the mux (filter counter)
+		counterNumber,Depth: IN std_logic_vector(3 downto 0); --selector of the mux (filter counter)
 		current_state: IN state;
 		
 		output : OUT std_logic_vector(15 downto 0)); --no carry 
@@ -34,7 +34,7 @@ component depthNotZero IS
 	
 	PORT(	fromOutDMA,fromOutReg : IN std_logic_vector(15 downto 0);
 		
-		Depth: IN std_logic_vector(2 downto 0); --selector of the mux (filter counter)
+		Depth: IN std_logic_vector(3 downto 0); --selector of the mux (filter counter)
 		
 		current_state: IN state;
 		output : OUT std_logic_vector(15 downto 0)); --no carry 
@@ -53,8 +53,9 @@ END component;
 
 Signal outputMux,outputAdder :std_logic_vector(15 downto 0);
 Signal cout,Enable , ShiftRegClk:std_logic;
+signal resetCounter : std_logic;
 BEGIN 
-	
+	resetCounter<= '1' when rst='1' or stateinput = WRITE_IMG_WIDTH  else '0';
 	Scounter: entity work.Counter  generic map ( 5 ) port map (enable,ShiftCounterRst,ShiftRegClk,'0',ShiftLeftCounterOutput , "00000");	
 	first:addressCounter port map (resetCounter,stateinput,outputCounterToDma , RealOutputCounter );	
 	second:depthNotZero  port map (DMAOutput,RegisterOutput,depth,stateinput,output);

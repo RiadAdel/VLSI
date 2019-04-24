@@ -6,7 +6,7 @@ ENTITY depthZero IS
 	
 	PORT(	fromOutReg : IN std_logic_vector(15 downto 0);
 		bias1,bias2,bias3,bias4,bias5,bias6,bias7,bias8: In std_logic_vector(15 downto 0);
-		counterNumber,Depth: IN std_logic_vector(2 downto 0); --selector of the mux (filter counter)
+		counterNumber,Depth: IN std_logic_vector(3 downto 0); --selector of the mux (filter counter)
 		current_state: IN state;
 		
 		output : OUT std_logic_vector(15 downto 0)); --no carry 
@@ -35,7 +35,7 @@ port(
   a7      : in  std_logic_vector(15 downto 0);
   a8      : in  std_logic_vector(15 downto 0);
 
-  sel     : in  std_logic_vector(2 downto 0);
+  sel     : in  std_logic_vector(3 downto 0);
   output  : out std_logic_vector(15 downto 0));
 end Component;
 
@@ -54,5 +54,5 @@ BEGIN
 	depth0:  tristatebuffer  generic map ( 16 ) port map (outputAdder,enable,output);
 
 
-	Enable <= '1' when current_state = SAVE  and depth = "000" else'0';
+	Enable <= '1' when current_state = SAVE  and depth = "0000" else'0';
 END DepthZeroArch;

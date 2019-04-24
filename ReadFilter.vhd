@@ -4,6 +4,9 @@ use work.constants.all;
 ------------------------------------------------------
 ENTITY ReadFilter IS
 	PORT(	current_state : in state;
+		LayerInfo : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+		depthcounter : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+		Heightcounter : IN STD_LOGIC_VECTOR( 4 DOWNTO 0);
 		FILTER : IN STD_LOGIC_VECTOR(399 DOWNTO 0);
 		FilterAddress : IN STD_LOGIC_VECTOR(12 DOWNTO 0);
 		msbNoOfFilters,CLK,RST,QImgStat,ACKF : IN std_logic;
@@ -24,8 +27,16 @@ ARCHITECTURE DATA_FLOW OF ReadFilter IS
 	SIGNAL secOperand: std_logic_vector(12 downto 0);
 	signal newAddress:STD_LOGIC_VECTOR(12 DOWNTO 0);
 	signal IndRst: std_logic;
+	signal depthminus :  STD_LOGIC_VECTOR(3 DOWNTO 0);
+	signal Heightminus :  STD_LOGIC_VECTOR( 4 DOWNTO 0);
+	signal dontrstIndicator : std_logic;
 		
 BEGIN
+	adder2: entity work.my_nadder generic map (4) port map(depthcounter,"1111",'0',depthminus);
+	adder3: entity work.my_nadder generic map (5) port map(Heightcounter,"11111",'0',Heightminus);
+	
+	dontrstIndicator<= '1' when depthminus= LayerInfo(12 downto 9)       and    Heightminus=LayerInfo( 8 downto 4 )             else  '0' ; 
+
 	IndicatorFilter <=IndicatorF;
 	filter1EN <= '1' when ((current_state = conv_ReadImg_ReadFilter) AND (QImgStat = '0') and (ACKF = '1') ) or ((current_state = CONV) AND (IndicatorF = "0") AND (QImgStat = '1') and (ACKF = '1') ) else '0';
 	filter2EN <= '1' when ((current_state = conv_ReadImg_ReadFilter) AND (QImgStat = '1')and (ACKF = '1')) or ((current_state = CONV) AND (IndicatorF = "0") AND (QImgStat = '0')and (ACKF = '1')) else '0';
@@ -46,7 +57,7 @@ BEGIN
 	-- DFFCLK <= '1' when (current_state = CONV AND ACKF='1' and (CLK'event and CLK='1')  ) else '0';
 	Qbar <= NOT(IndicatorF);
 	
-	IndRst<= '1' when current_state = SHLEFT  or  RST = '1' else '0';
+	IndRst<= '1' when ((current_state = SHLEFT ) and (dontrstIndicator='0'))   or  RST = '1'  else '0';
 	DDF0 : entity work.nBitRegister generic map (1) port map(Qbar,DFFCLK,IndRst,'1',IndicatorF);
 
 	

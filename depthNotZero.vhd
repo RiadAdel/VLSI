@@ -6,7 +6,7 @@ ENTITY depthNotZero IS
 	
 	PORT(	fromOutDMA,fromOutReg : IN std_logic_vector(15 downto 0);
 		
-		Depth: IN std_logic_vector(2 downto 0); --selector of the mux (filter counter)
+		Depth: IN std_logic_vector(3 downto 0); --selector of the mux (filter counter)
 		
 		current_state: IN state;
 		output : OUT std_logic_vector(15 downto 0)); --no carry 
@@ -40,5 +40,5 @@ BEGIN
 	depth0:  tristatebuffer  generic map ( 16 ) port map (outputAdder,enable,output);
 
 
-	Enable <= '1' when current_state = SAVE and depth /= "000" else'0'; --enable when depth is not zero
+	Enable <= '1' when current_state = SAVE and depth /= "0000" else'0'; --enable when depth is not zero
 END DepthNotZeroArch;
