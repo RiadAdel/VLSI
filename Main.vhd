@@ -107,7 +107,7 @@ signal K :   std_logic ;
 signal B : std_logic;
 signal L : std_logic;
 signal D : std_logic;
-
+signal ImgAddRST : std_logic;
 
 signal CNDepthoutput :  std_logic_vector( 2 downto 0);
 signal CNLayersoutput:  std_logic_vector(1 downto 0);
@@ -154,9 +154,12 @@ ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , Fi
 
 FilterAddress:entity work.nBitRegister generic map (n=>13) port map ( FilterAddressIN , clk , rst ,FilterAddressEN , FilterAddressOut );
 AdderTryState:entity work.triStateBuffer generic map (n=>13) port map ( TriStateCounterOUT , TriStateCounterEN,FilterAddressIN );
-FilterAddressAdder:entity work.my_nadder generic map (n=>13) port map ( FilterAddressOut ,(others=>'0') ,'1', TriStateCounterOUT);
+FilterAddressAdder:entity work.my_nadder generic map (n=>13) port map ( FilterAddressOut ,"0000000000000" ,'1', TriStateCounterOUT);
 
-ImgAddReg:entity work.nBitRegister generic map (n=>13) port map ( ImgAddRegIN , clk , rst ,ImgAddRegEN , ImgAddRegOut );
+
+ImgAddRST<='1' when rst='1' or current_state=CHECKS else '0';
+
+ImgAddReg:entity work.nBitRegister generic map (n=>13) port map ( ImgAddRegIN , clk , ImgAddRST ,ImgAddRegEN , ImgAddRegOut );
 ImgAddACKTri:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddACKTriIN, ImgAddACKTriEN, ImgAddRegIN );
 --error done
 ReadLayerInfo:entity work.ReadLayerInfo port map (DataFOut(15 downto 0 ),DataIOut(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
@@ -185,10 +188,12 @@ ChState: entity work.StateChecks port map (current_state ,NoOfLayers, LayerInfoO
 
 
 
+Owidth : entity work.outWidthState port map (current_state , LayerInfoOut  ,  AddressI ,DataIIn    );
+
 --------------------------
 
 -- get the next state circuit--
-state_decode_proc: process(current_state,ACKF,ACKWidth  , ACKI,clk , ImgCounterOuput , ACKC ,SaveAckLatch , X , B,Y,K , D,LayerInfoOut )
+state_decode_proc: process(current_state,ACKF,ACKWidth  , ACKI,clk , ImgCounterOuput , ACKC ,SaveAckLatch , X , B,Y,K , D,LayerInfoOut , L )
 BEGIN
 
 	case current_state is 
@@ -271,14 +276,22 @@ BEGIN
 	
 
 		when CHECKS=>
-			if D='0' then   --- will change before i read img or filter
-			   next_state<=RL;
+			if L = '0' then
+				next_state<=FINISH;
+			elsif D='0' then   --- will change before i read img or filter
+			   next_state<=WRITE_IMG_WIDTH;
 			elsif D='1'and LayerInfoOut(15) = '0'  then
 			next_state<=conv_ReadImg;
 			else
 			next_state<=Pool_Read_Img;
-			
 			end if ;
+
+		 when WRITE_IMG_WIDTH=>
+			if (ACKI'EVENT AND ACKI = '1') then 
+			   next_state<=RL;
+			end if ;
+		 when FINISH=>
+			
 	
 			
 	
@@ -302,7 +315,22 @@ end process;
 
 DepthGreatZero<= not (CNDepthoutput(0) and CNDepthoutput(1) and CNDepthoutput(2));
 
-SaveAckLatch<= '1'  when  ((current_state=SAVE) and (ACKI = '1' ) and ( clk'event and clk='0')) else '0' when  (current_state=IMGSTAT or current_state = CONV) ;
+
+--error done
+process (current_state,ACKI,CLK)
+	begin
+	if (current_state=SAVE) and (ACKI = '1' ) then
+		if CLK'event and CLK = '0' then
+			SaveAckLatch <= '1';
+		end if;
+	elsif (current_state=IMGSTAT or current_state = CONV) then
+		SaveAckLatch <= '0';
+	end if;
+	end process;
+
+
+
+---SaveAckLatch<= '1'  when  ((current_state=SAVE) and (ACKI = '1' ) and ( clk'event and clk='0')) else '0' when  (current_state=IMGSTAT or current_state = CONV) ;
 
 ReadSave<= '1' when ( (current_state=SAVE) and (DepthGreatZero = '1' ) and (WriteSave = '0')   ) else '0'; 
 
@@ -401,7 +429,22 @@ begin
 			ReadI<= '0';
 			WriteF<='0';
 			WriteI<='0';
+			done <= '0';
+		when WRITE_IMG_WIDTH=>
+			ReadF<='0';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='1';
+			done <= '0';
+		when FINISH =>
+			ReadF<='0';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
 			done <= '1';
+
+
+			
 
 	end case;
 end process;
