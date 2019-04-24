@@ -52,9 +52,19 @@ Begin
 
 CountereEN <= '1' when (current_state = CONV ) and (ACKC = '0')      else '0';
 CountereRST <= '1' when (rst = '1') or (CounterOut = "100")  else '0' ;
-
-ACKC <= '1' when( CounterOut = "011") and (CLK'event and CLK = '1') 
-else '0' when   (CLK'event and CLK = '1'); 
+-- error done
+identifier : process( CounterOut,CLK )
+begin
+  if CounterOut = "011" then
+    if CLK'event and CLK = '1' then
+      ACKC <= '1';
+    end if ;
+  elsif CLK'event and CLK = '1' then
+      ACKC <= '0';
+  end if ;
+end process ; -- identifier
+--ACKC <= '1' when( CounterOut = "011") and (CLK'event and CLK = '1') 
+--else '0' when   (CLK'event and CLK = '1'); 
 ACK <=ACKC;
 
 
