@@ -1,47 +1,34 @@
 Library ieee;
 Use ieee.std_logic_1164.all;
+use work.constants.all;
 
 ------------------------------------------------------
-ENTITY Checks IS
-	PORT(	STATE : in std_logic;
-		noOfLayers : in std_logic_vector(1 downto 0);
-		FILTER : IN STD_LOGIC_VECTOR(447 DOWNTO 0);
-		FilterAddress : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-		CLK,RST,ACK : IN std_logic;
+ENTITY StateChecks IS
+	PORT(	current_state : in state;
+		noOfLayers : in std_logic_vector(15 downto 0);
+		LayerInfo : in std_logic_vector(15 downto 0);
+		CLK,RST : IN std_logic;
 		L,D : out std_logic;
-		CNHoutput : out std_logic_vector(3 downto 0);
-		DMAAddress,UpdatedAddress,outFilter0,outFilter1 : out STD_LOGIC_VECTOR(15 DOWNTO 0));
-END Checks;
+		CNDoutput : out std_logic_vector( 2 downto 0);
+		CNLoutput: out std_logic_vector(1 downto 0));
+END StateChecks;
 
 ------------------------------------------------
-ARCHITECTURE archCHECKS OF Checks IS
+ARCHITECTURE archCHECKS OF StateChecks IS
 
-	SIGNAL CNDoutput : std_logic;
-	SIGNAL CNLoutput : std_logic;
-	SIGNAL addCounterRST : std_logic;
-	SIGNAL CNHRST : std_logic;
-
-	COMPONENT Counter is
-	generic(n: integer := 16);
-	port(
-		enable:in std_logic;
-		reset:in std_logic;
-		clk:in std_logic;
-		load:in std_logic;
-		output:out std_logic_vector(n-1 downto 0);
-		input:in std_logic_vector(n-1 downto 0));
-	END COMPONENT;
-
+	signal DepthClk : std_logic;
+	signal SCNDoutput : std_logic_vector( 2 downto 0);
+	signal SCNLoutput: std_logic_vector(1 downto 0);
+	signal SD : std_logic;
 BEGIN
-	
-	counterNoDepth0: Counter generic map(4) port map('1',RST,State,'0',CNDoutput,"0001");
-	D <= CNDoutput xor noOfLayers;
+	CNDoutput<=SCNDoutput;
+	DepthClk<= '1' when  current_state = CHECKS  else '0';
+	counterNoDepth0: entity work.Counter generic map(3) port map('1',RST,DepthClk,'0',SCNDoutput,"001");
+	SD <=  '0' when (SCNDoutput = LayerInfo( 11 downto 9 ) ) else '1';
+	D<=SD;
+	CNLoutput<=SCNLoutput;
+	counterNoLayer0: entity work.Counter generic map(2) port map('1',RST,SD,'0',SCNLoutput,"01");
+	L <=  '0' when (SCNLoutput = noOfLayers( 1 downto 0 ) ) else '1';
 
-	counterNoLayer0: Counter generic map(4) port map('1',RST,D,'0',CNLoutput,"0001");
-	L <= CNLoutput xor noOfLayers;
-
-	--addCounterRST <= '1' when ((State = stateCHECK) or (RST = 1)) else '0';
-	Address0: Counter generic map(4) port map('1',addCounterRST,CLK,'0',cOutput,"0001");
-	
 
 END archCHECKS;

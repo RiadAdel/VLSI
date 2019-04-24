@@ -3,7 +3,7 @@ Use ieee.std_logic_1164.all;
 use work.constants.all;
 ------------------------------------------------------
 ENTITY ReadFilter IS
-	PORT(	STATE : in state;
+	PORT(	current_state : in state;
 		FILTER : IN STD_LOGIC_VECTOR(399 DOWNTO 0);
 		FilterAddress : IN STD_LOGIC_VECTOR(12 DOWNTO 0);
 		msbNoOfFilters,CLK,RST,QImgStat,ACKF : IN std_logic;
@@ -23,21 +23,24 @@ ARCHITECTURE DATA_FLOW OF ReadFilter IS
 	SIGNAL Qbar : std_logic_vector(0 downto 0);
 	SIGNAL secOperand: std_logic_vector(12 downto 0);
 	signal newAddress:STD_LOGIC_VECTOR(12 DOWNTO 0);
+	signal IndRst: std_logic;
 		
 BEGIN
 	IndicatorFilter <=IndicatorF;
-	filter1EN <= '1' when ((STATE = conv_ReadImg_ReadFilter) AND (QImgStat = '0') and (ACKF = '1') ) or ((STATE = CONV) AND (IndicatorF = "0") AND (QImgStat = '1') and (ACKF = '1') ) else '0';
-	filter2EN <= '1' when ((STATE = conv_ReadImg_ReadFilter) AND (QImgStat = '1')and (ACKF = '1')) or ((STATE = CONV) AND (IndicatorF = "0") AND (QImgStat = '0')and (ACKF = '1')) else '0';
+	filter1EN <= '1' when ((current_state = conv_ReadImg_ReadFilter) AND (QImgStat = '0') and (ACKF = '1') ) or ((current_state = CONV) AND (IndicatorF = "0") AND (QImgStat = '1') and (ACKF = '1') ) else '0';
+	filter2EN <= '1' when ((current_state = conv_ReadImg_ReadFilter) AND (QImgStat = '1')and (ACKF = '1')) or ((current_state = CONV) AND (IndicatorF = "0") AND (QImgStat = '0')and (ACKF = '1')) else '0';
 
 	F0 : entity work.nBitRegister generic map (400) port map(FILTER,CLK,RST,filter1EN,outFilter0);
 	F1 : entity work.nBitRegister generic map (400) port map(FILTER,CLK,RST,filter2EN,outFilter1);
 	
-	DFFCLK <= '1' when (STATE = CONV AND ACKF='1' and (CLK'event and CLK='1')  ) else '0';
+	DFFCLK <= '1' when (current_state = CONV AND ACKF='1' and (CLK'event and CLK='1')  ) else '0';
 	Qbar <= NOT(IndicatorF);
-	DDF0 : entity work.nBitRegister generic map (1) port map(Qbar,DFFCLK,RST,'1',IndicatorF);
+	
+	IndRst<= '1' when current_state = SHLEFT  or  RST = '1' else '0';
+	DDF0 : entity work.nBitRegister generic map (1) port map(Qbar,DFFCLK,IndRst,'1',IndicatorF);
 
 	
-	triStateBufferEN <= '1' when (STATE = conv_ReadImg_ReadFilter) or ((STATE = CONV) AND (IndicatorF = "0")) else '0';
+	triStateBufferEN <= '1' when (current_state = conv_ReadImg_ReadFilter) or ((current_state = CONV) AND (IndicatorF = "0")) else '0';
 
 	tsb0 : entity work.triStateBuffer generic map (13) port map(FilterAddress,triStateBufferEN,DMAAddress);
 	
@@ -46,7 +49,7 @@ BEGIN
 
 	adder0: entity work.my_nadder generic map (13) port map(FilterAddress,secOperand,'0',newAddress);
 	
-	tristateAddEn <='1' when ((STATE = conv_ReadImg_ReadFilter) or ((STATE = CONV) AND (IndicatorF = "0"))) else '0';
+	tristateAddEn <='1' when ((current_state = conv_ReadImg_ReadFilter) or ((current_state = CONV) AND (IndicatorF = "0"))) else '0';
 
 	tsb2 : entity work.triStateBuffer generic map (13)port map(newAddress,tristateAddEn,UpdatedAddress);
 	

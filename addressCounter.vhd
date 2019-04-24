@@ -5,8 +5,10 @@ use work.constants.all;
 ENTITY addressCounter IS
 	
 	PORT(	reset:in std_logic;		
-		state: IN state;
-		outputAddress : OUT std_logic_vector(12 downto 0)); 
+		current_state: IN state;
+		outputAddress : OUT std_logic_vector(12 downto 0); 
+		RealOutputCounter : out std_logic_vector(12 downto 0)
+	);
 END ENTITY addressCounter;
 
 ARCHITECTURE addressCounterArch OF addressCounter IS	
@@ -34,9 +36,11 @@ signal outputCounter,input : std_logic_vector(12 downto 0);
 signal enable : std_logic;
 BEGIN 
 	
+	RealOutputCounter<=outputCounter;
+	
 	myCounter:  Counter  generic map ( 13 ) port map (enable,reset,enable,'0',outputCounter,input);	
 	outOfAddressCounter:  tristatebuffer  generic map ( 13 ) port map (outputCounter,enable,outputAddress);
 
 
-	Enable <= '1' when state = SAVE else'0'; --enable when depth is not zero
+	Enable <= '1' when current_state = SAVE else'0'; --enable when depth is not zero
 END addressCounterArch;

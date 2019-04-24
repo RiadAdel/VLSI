@@ -12,7 +12,7 @@ ARCHITECTURE triBuffer OF triStateBuffer IS
 BEGIN 
 	PROCESS(D,EN)
 	BEGIN
-		IF EN  = '0' THEN 
+		IF EN  = '0' or EN = 'Z' THEN 
 			F <= (OTHERS=>'Z');
 		ELSE F <= D;
 		END IF;

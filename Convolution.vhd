@@ -5,7 +5,7 @@ use work.constants.all;
 
 entity Convolution is
   port (
-    STATE : in state;
+    current_state : in state;
     CLK,RST ,QImgStat:in std_logic; 
     ACK : out std_logic;
     LayerInfo : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
@@ -41,7 +41,7 @@ signal pool :  STD_LOGIC_VECTOR(15 DOWNTO 0);
 
 signal MultiplierOut16 : STD_LOGIC_VECTOR(399 DOWNTO 0);
 
-signal CounterOut : std_logic_vector(1 downto 0);
+signal CounterOut : std_logic_vector(2 downto 0);
 signal CountereEN : std_logic;
 signal ACKC : std_logic;
 signal CountereRST : std_logic;
@@ -50,10 +50,10 @@ signal CountereRST : std_logic;
 
 Begin
 
-CountereEN <= '1' when (STATE = CONV ) and (ACKC = '0')      else '0';
-CountereRST <= '1' when (rst = '1') or (CounterOut = "10")  else '0' ;
+CountereEN <= '1' when (current_state = CONV ) and (ACKC = '0')      else '0';
+CountereRST <= '1' when (rst = '1') or (CounterOut = "100")  else '0' ;
 
-ACKC <= '1' when( CounterOut = "01") and (CLK'event and CLK = '1') 
+ACKC <= '1' when( CounterOut = "011") and (CLK'event and CLK = '1') 
 else '0' when   (CLK'event and CLK = '1'); 
 ACK <=ACKC;
 
@@ -135,7 +135,7 @@ ConvOuput<= Relu when LayerInfo(15)='0' else pool;
 
 
 
-EndCounter:entity work.Counter generic map (n=>2) port map ( CountereEN ,CountereRST , clk , '0' ,CounterOut , "00" );
+EndCounter:entity work.Counter generic map (n=>3) port map ( CountereEN ,CountereRST , clk , '0' ,CounterOut , "000" );
 
 
 

@@ -88,6 +88,33 @@ signal ImgRegEN : std_logic_vector(5 downto 0);
 --------------------------------------------------
 signal ACKC : std_logic;
 signal ConvOuput : std_logic_vector(15 downto 0); 
+-------------------------------------------------
+signal ReadAddressCounter: std_logic_vector(12 downto 0); 
+signal ShiftLeftCounterOutput:  std_logic_vector(4 downto 0) ;
+signal ShiftCounterRst:std_logic;
+signal RealOutputCounter:   std_logic_vector(12 downto 0);
+-----------------------------------------------------
+signal OutputCounterLoad:   std_logic_vector(12 downto 0);
+signal Q : std_logic ;
+signal NumOfFilters :std_logic_vector(2 downto 0 ); 
+signal NumOfHeight:std_logic_vector(4 downto 0 );
+signal X :  std_logic ;
+signal Y :   std_logic ;
+signal K :   std_logic ;
+
+--------------------------------------------------------
+signal B : std_logic;
+signal L : std_logic;
+signal D : std_logic;
+
+
+signal CNDepthoutput :  std_logic_vector( 2 downto 0);
+signal CNLayersoutput:  std_logic_vector(1 downto 0);
+
+signal ReadSave : std_logic;
+signal WriteSave: std_logic;
+signal SaveAckLatch :std_logic;
+signal DepthGreatZero :std_logic;
 
 BEGIN
 ---conditions---
@@ -104,6 +131,9 @@ ImgAddRegEN <= '1' when (current_state = RL and ACKI = '1' ) or (((current_state
 ImgAddACKTriEN<='1' when (current_state = RL ) else '0';
 zero <= (others=>'0');
 ImgAddACKTriIN <= zero&ACKI;
+
+ShiftCounterRst<= '1' when (rst='1') or (current_state = SHUP) or ((current_state =CONV) and (B = '0')) else '0'; 
+B<= '0' when ShiftLeftCounterOutput ="11100"  else '1';
 -----------------
 
 
@@ -114,7 +144,12 @@ ImgAddACKTriIN <= zero&ACKI;
 
 
 FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataFIn , DataFOut , ACKF ,counterOutF );
+
 ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataIIn , DataIOut ,ACKI ,counterOutI);
+
+
+
+
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataFOut(15 downto 0) , NoOfLayers , AddressF );
 
@@ -134,21 +169,28 @@ ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,L
 RBias:entity work.ReadBias port map (current_state,DataFOut,FilterAddressOut,AddressF,FilterAddressIN,clk,rst,LayerInfoOut,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , ACKF);
 
  
-Rfilter:entity work.ReadFilter port map (current_state,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , '0' , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
+Rfilter:entity work.ReadFilter port map (current_state,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , Q , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
 
 
-RImg : entity work.ReadImage port map (current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataIOut ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN);
+RImg : entity work.ReadImage port map (WriteI, current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataIOut ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN);
 
-Sconv : entity work.Convolution port map (current_state , clk , rst ,'0', ACKC ,LayerInfoOut, ImgAddRegOut ,OutputImg0(79 downto 0) , OutputImg1(79 downto 0) , OutputImg2(79 downto 0),OutputImg3(79 downto 0),OutputImg4(79 downto 0),Filter1 , Filter2,ConvOuput);
+Sconv : entity work.Convolution port map (current_state , clk , rst ,Q, ACKC ,LayerInfoOut, ImgAddRegOut ,OutputImg0(79 downto 0) , OutputImg1(79 downto 0) , OutputImg2(79 downto 0),OutputImg3(79 downto 0),OutputImg4(79 downto 0),Filter1 , Filter2,ConvOuput);
 
+
+Ssave : entity work.saveState port map (DataIOut(15 downto 0) , ConvOuput ,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , CNDepthoutput ,NumOfFilters , rst,current_state , clk , AddressI,RealOutputCounter ,DataIIn , ShiftLeftCounterOutput , ShiftCounterRst);
+
+
+Istate: entity work.ImageState port map (current_state, WidthSquareOut ,RealOutputCounter, OutputCounterLoad  , ShiftLeftCounterOutput , LayerInfoOut , clk , rst , Q  , NumOfFilters , NumOfHeight , X , Y , K);
+
+
+ChState: entity work.StateChecks port map (current_state ,NoOfLayers, LayerInfoOut , clk , rst , L , D , CNDepthoutput , CNLayersoutput );
 
 
 
 --------------------------
 
-
 -- get the next state circuit--
-state_decode_proc: process(current_state,ACKF,ACKWidth  , ACKI,clk , ImgCounterOuput)
+state_decode_proc: process(current_state,ACKF,ACKWidth  , ACKI,clk , ImgCounterOuput , ACKC ,SaveAckLatch , X , B,Y,K , D,LayerInfoOut )
 BEGIN
 
 	case current_state is 
@@ -192,8 +234,48 @@ BEGIN
 			end if ;
 
 		when CONV=>
+			if (ACKC'EVENT AND ACKC = '1') then   --- will change before i read img or filter
+			   next_state<=SAVE;
+			end if ;
 		
 		when SAVE=>
+			if (ACKI'EVENT AND ACKI = '1') and (WriteI = '1') then   --- will change before i read img or filter
+			   next_state<=IMGSTAT;
+			end if ;
+			
+		
+		when IMGSTAT=>
+			if X='0' then   --- will change before i read img or filter
+			   next_state<=SHLEFT;
+			else  next_state<=CONV;
+			end if ;
+		
+
+		when SHLEFT=>
+			if B='0' and Y='0' then   --- will change before i read img or filter
+			   next_state<=SHUP;
+			elsif B='0' and Y='1' then
+			  next_state<=CONV;
+			else   next_state<=SHLEFT;
+			end if ;
+
+		when SHUP=>
+			if K='0' then   --- will change before i read img or filter
+			   next_state<=CHECKS;
+			else next_state<=CONV;
+
+			end if ;
+	
+
+		when CHECKS=>
+			if D='0' then   --- will change before i read img or filter
+			   next_state<=RL;
+			elsif D='1'and LayerInfoOut(15) = '0'  then
+			next_state<=conv_ReadImg;
+			else
+			next_state<=Pool_Read_Img;
+			
+			end if ;
 	
 			
 	
@@ -214,7 +296,16 @@ end process;
 -- end of circuit--
 
 --output of process circuit--
-output_proc : process(current_state,IndicatorF)
+
+DepthGreatZero<= not (CNDepthoutput(0) and CNDepthoutput(1) and CNDepthoutput(2));
+
+SaveAckLatch<= '1'  when  ((current_state=SAVE) and (ACKI = '1' ) and ( clk'event and clk='0')) else '0' when  (current_state=IMGSTAT or current_state = CONV) ;
+
+ReadSave<= '1' when ( (current_state=SAVE) and (DepthGreatZero = '1' ) and (WriteSave = '0')   ) else '0'; 
+
+WriteSave<= '1'  when ((current_state=SAVE) and (CNDepthoutput = "000" )) or ( (current_state=SAVE) and (SaveAckLatch = '1')) else '0' ;
+
+output_proc : process(current_state,IndicatorF,IndicatorI , ReadSave , WriteSave)
 begin
 	case current_state is
 		when RI=>
@@ -265,9 +356,33 @@ begin
 			WriteI<='0';
 		when SAVE=>
 			ReadF<='0';
-			ReadI<='0';
+			ReadI<=ReadSave;
 			WriteF<='0';
-			WriteI<='1';
+			WriteI<=WriteSave;
+
+		when IMGSTAT=>
+			ReadF<='0';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
+
+		when SHLEFT=>
+			ReadF<='0';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
+
+		when SHUP=>
+			ReadF<='0';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
+
+		when CHECKS=>
+			ReadF<='0';
+			ReadI<= '0';
+			WriteF<='0';
+			WriteI<='0';
 
 	end case;
 end process;
