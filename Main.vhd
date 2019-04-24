@@ -4,7 +4,8 @@ use work.constants.all;
 
 
 ENTITY Main IS
-	PORT(rst , cl , dmaStartSignal , start : IN std_logic;
+	PORT(rst , cl , start : IN std_logic;
+		dmaStartSignal : inout std_logic;
 		 done:out std_logic);
 END ENTITY Main;
 
@@ -120,6 +121,8 @@ signal DepthGreatZero :std_logic;
 signal SwitchMEM : std_logic;
 signal CLK : std_logic;
 
+signal ramSelector : std_logic;
+
 BEGIN
 ---conditions---
 
@@ -147,17 +150,11 @@ ShiftCounterRst<= '1' when (rst='1') or (current_state = SHUP) or ((current_stat
 B<= '0' when ShiftLeftCounterOutput ="11100"  else '1';
 -----------------
 
-
-
-
-
-
-
-
+ramSelector <= '1' when current_state = SAVE or current_state = WRITE_IMG_WIDTH
+else '0';
 FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataFIn , DataFOut , ACKF ,counterOutF );
 
-ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataIIn , DataIOut ,ACKI ,counterOutI);
---ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,,,);
+ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,SwitchMEM,ramSelector,ReadI,WriteI,clk,dmaStartSignal,ACKI,counterOutI,DataIout);
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataFOut(15 downto 0) , NoOfLayers , AddressF );
 

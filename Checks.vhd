@@ -25,7 +25,7 @@ BEGIN
 	CNDoutput<=SCNDoutput;
 	DepthClk<= '1' when  current_state = CHECKS  else '0';
 	DepthCounterRst<= '1' when RST='1' or current_state = WRITE_IMG_WIDTH else '0';
-	counterNoDepth0: entity work.Counter generic map(4) port map('1',DepthCounterRst,DepthClk,'0',SCNDoutput,"001");
+	counterNoDepth0: entity work.Counter generic map(4) port map('1',DepthCounterRst,DepthClk,'0',SCNDoutput,"0001");
 	SD <=  '0' when (SCNDoutput = LayerInfo( 12 downto 9 ) ) else '1';
 	D<=SD;
 	CNLoutput<=SCNLoutput;
