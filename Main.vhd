@@ -4,7 +4,8 @@ use work.constants.all;
 
 
 ENTITY Main IS
-	PORT(rst , clk , dmaStartSignal: IN std_logic;
+	PORT(rst , cl , start : IN std_logic;
+		dmaStartSignal : inout std_logic;
 		 done:out std_logic);
 END ENTITY Main;
 
@@ -97,7 +98,7 @@ signal RealOutputCounter:   std_logic_vector(12 downto 0);
 -----------------------------------------------------
 signal OutputCounterLoad:   std_logic_vector(12 downto 0);
 signal Q : std_logic ;
-signal NumOfFilters :std_logic_vector(2 downto 0 ); 
+signal NumOfFilters :std_logic_vector(3 downto 0 ); 
 signal NumOfHeight:std_logic_vector(4 downto 0 );
 signal X :  std_logic ;
 signal Y :   std_logic ;
@@ -109,7 +110,7 @@ signal L : std_logic;
 signal D : std_logic;
 signal ImgAddRST : std_logic;
 
-signal CNDepthoutput :  std_logic_vector( 2 downto 0);
+signal CNDepthoutput :  std_logic_vector( 3 downto 0);
 signal CNLayersoutput:  std_logic_vector(1 downto 0);
 
 signal ReadSave : std_logic;
@@ -117,8 +118,20 @@ signal WriteSave: std_logic;
 signal SaveAckLatch :std_logic;
 signal DepthGreatZero :std_logic;
 
+signal SwitchMEM : std_logic;
+signal CLK : std_logic;
+
+signal ramSelector : std_logic;
+
 BEGIN
 ---conditions---
+
+
+
+
+CLK<= cl and start ;
+SwitchMEM<= '1' when current_state = WRITE_IMG_WIDTH  and ACKI = '1'  else '0';
+
 FilterAddressEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )
  or (current_state = conv_calc_ReadImg_ReadBias  and ACKF = '1' )
 or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  ) else '0';
@@ -137,17 +150,11 @@ ShiftCounterRst<= '1' when (rst='1') or (current_state = SHUP) or ((current_stat
 B<= '0' when ShiftLeftCounterOutput ="11100"  else '1';
 -----------------
 
-
-
-
-
-
-
-
+ramSelector <= '1' when current_state = SAVE or current_state = WRITE_IMG_WIDTH
+else '0';
 FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataFIn , DataFOut , ACKF ,counterOutF );
 
-ImgMem:entity work.RAM generic map (X=>28) port map (rst,clk,WriteI,ReadI ,AddressI , DataIIn , DataIOut ,ACKI ,counterOutI);
---ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,,,);
+ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,SwitchMEM,ramSelector,ReadI,WriteI,clk,dmaStartSignal,ACKI,counterOutI,DataIout);
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataFOut(15 downto 0) , NoOfLayers , AddressF );
 
@@ -169,8 +176,7 @@ ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,L
 
 RBias:entity work.ReadBias port map (current_state,DataFOut,FilterAddressOut,AddressF,FilterAddressIN,clk,rst,LayerInfoOut,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , ACKF);
 
- 
-Rfilter:entity work.ReadFilter port map (current_state,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , Q , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
+Rfilter:entity work.ReadFilter port map (current_state,LayerInfoOut ,CNDepthoutput ,NumOfHeight  ,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , Q , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
 
 
 RImg : entity work.ReadImage port map (WriteI, current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataIOut ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN);
@@ -277,7 +283,7 @@ BEGIN
 
 		when CHECKS=>
 			if L = '0' then
-				next_state<=FINISH;
+				next_state<=FIN;
 			elsif D='0' then   --- will change before i read img or filter
 			   next_state<=WRITE_IMG_WIDTH;
 			elsif D='1'and LayerInfoOut(15) = '0'  then
@@ -290,7 +296,7 @@ BEGIN
 			if (ACKI'EVENT AND ACKI = '1') then 
 			   next_state<=RL;
 			end if ;
-		 when FINISH=>
+		 when FIN=>
 			
 	
 			
@@ -313,7 +319,7 @@ end process;
 
 --output of process circuit--
 
-DepthGreatZero<= not (CNDepthoutput(0) and CNDepthoutput(1) and CNDepthoutput(2));
+DepthGreatZero<= not (CNDepthoutput(0) and CNDepthoutput(1) and CNDepthoutput(2) and  CNDepthoutput(3));
 
 
 --error done
@@ -334,7 +340,7 @@ process (current_state,ACKI,CLK)
 
 ReadSave<= '1' when ( (current_state=SAVE) and (DepthGreatZero = '1' ) and (WriteSave = '0')   ) else '0'; 
 
-WriteSave<= '1'  when ((current_state=SAVE) and (CNDepthoutput = "000" )) or ( (current_state=SAVE) and (SaveAckLatch = '1')) else '0' ;
+WriteSave<= '1'  when ((current_state=SAVE) and (CNDepthoutput = "0000" )) or ( (current_state=SAVE) and (SaveAckLatch = '1')) else '0' ;
 
 output_proc : process(current_state,IndicatorF,IndicatorI , ReadSave , WriteSave)
 begin
@@ -436,7 +442,7 @@ begin
 			WriteF<='0';
 			WriteI<='1';
 			done <= '0';
-		when FINISH =>
+		when FIN =>
 			ReadF<='0';
 			ReadI<= '0';
 			WriteF<='0';

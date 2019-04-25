@@ -12,7 +12,7 @@ port(
   a7      : in  std_logic_vector(15 downto 0);
   a8      : in  std_logic_vector(15 downto 0);
 
-  sel     : in  std_logic_vector(2 downto 0);
+  sel     : in  std_logic_vector(3 downto 0);
   output       : out std_logic_vector(15 downto 0));
 end mux7;
 
@@ -20,13 +20,13 @@ architecture mux7Arch of mux7 is
   -- declarative part: empty
 begin
 
-output  <= a1 when sel = "000" 
-      else a2 when sel = "001"
-      else a3 when sel = "010"
-      else a4 when sel = "011"
-      else a5 when sel = "100"
-      else a6 when sel = "101"
-      else a7 when sel = "110"
+output  <= a1 when sel = "0000" 
+      else a2 when sel = "0001"
+      else a3 when sel = "0010"
+      else a4 when sel = "0011"
+      else a5 when sel = "0100"
+      else a6 when sel = "0101"
+      else a7 when sel = "0110"
       else a8;
 
 
