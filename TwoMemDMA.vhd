@@ -99,8 +99,8 @@ reset2 <= resetEN ;--when (Qout XOR ramSelector)   = '1' else '0';
 
 --mfc happens in both write and read
 MFC <=        mfcOfRam1 when ramSelector = '0' and Qout = '0' else --read and no toggle happened(toggle 2 times = no toggle)
-	      mfcOfRam1 when ramSelector = '1' and Qout = '1' else --write and toggle happened
-	      mfcOfRam2 when ramSelector = '1' and Qout = '0' else --write and no toggle
-	      mfcOfRam2; 					   --read with toggle
+	      mfcOfRam1 when ramSelector = '1' and Qout = '0' else --write and toggle happened
+	      mfcOfRam2 when ramSelector = '1' and Qout = '1' else --write and no toggle
+	      mfcOfRam2 when ramSelector = '0' and Qout = '1'; 	   --read with toggle
 end DMAmemory;
 
