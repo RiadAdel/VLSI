@@ -32,12 +32,14 @@ architecture CounterImplementation of Counter is
 	port map    (toOutput,one,'0',addResult);
 	zero <= (others => '0');
 	one <= zero &'1'  ;
-	process(enable,input,reset,clk,load)
+	process(enable,reset,clk,load)
 	begin
 		if (reset = '1') then
 			toOutput <= (others => '0');
-		elsif (load = '1' and enable = '1') then
+		elsif (load = '1') then
+			if (clk = '0' and clk'event) then
 			toOutput <=input;
+			end if ;
 		elsif (clk = '1' and clk'event) then
 			if(enable = '1') then
 				toOutput <= addResult;

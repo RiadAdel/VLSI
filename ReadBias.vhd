@@ -6,7 +6,7 @@ ENTITY ReadBias IS
 	PORT(	current_state : in state;
 		BIAS : IN STD_LOGIC_VECTOR(399 DOWNTO 0);
 		FilterAddress: IN STD_LOGIC_VECTOR(12 DOWNTO 0);
-		DMAAddressToFilter,UpdatedAddress: OUT STD_LOGIC_VECTOR(12 DOWNTO 0);
+		DMAAddressToFilter,UpdatedAddress , changerAdd: OUT STD_LOGIC_VECTOR(12 DOWNTO 0);
 		CLK,RST : IN std_logic;
 		LayerInfo : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
 		outBias0,outBias1,outBias2 : out STD_LOGIC_VECTOR(15 DOWNTO 0);
@@ -43,6 +43,7 @@ triEnable <= '1' when (current_state=conv_calc_ReadImg_ReadBias )  else '0';
 	adder0: entity work.my_nadder generic map (13) port map(FilterAddress,NewAddress,'0',upAddress);
 
 	TriStateAdd : entity work.triStateBuffer generic map (13) port map(upAddress,triEnable,UpdatedAddress);
+	TriStateAddchanger : entity work.triStateBuffer generic map (13) port map(upAddress,triEnable,changerAdd);
 	
 
 END DATA_FLOW;

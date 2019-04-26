@@ -14,7 +14,9 @@ ENTITY saveState IS
 		RealOutputCounter:  out std_logic_vector(12 downto 0);
 		output : OUT std_logic_vector(15 downto 0);
 		ShiftLeftCounterOutput: out std_logic_vector(4 downto 0) ;
-		ShiftCounterRst: In std_logic ); --no carry 
+		ShiftCounterRst: In std_logic;
+		AddresCounterLoad : in STD_LOGIC_VECTOR(12 DOWNTO 0);
+		X , Y : in std_logic ); --no carry 
 END ENTITY saveState;
 
 ARCHITECTURE saveStateArch OF saveState IS	
@@ -45,7 +47,9 @@ component addressCounter IS
 	PORT(	reset:in std_logic;		
 		current_state: IN state;
 		outputAddress : OUT std_logic_vector(12 downto 0);
-		RealOutputCounter:  out std_logic_vector(12 downto 0)); 
+		RealOutputCounter:  out std_logic_vector(12 downto 0);
+		AddresCounterLoad : in STD_LOGIC_VECTOR(12 DOWNTO 0);
+		X , Y , clk : in std_logic ); 
 END component;
 
 
@@ -57,7 +61,7 @@ signal resetCounter : std_logic;
 BEGIN 
 	resetCounter<= '1' when rst='1' or stateinput = WRITE_IMG_WIDTH  else '0';
 	Scounter: entity work.Counter  generic map ( 5 ) port map (enable,ShiftCounterRst,ShiftRegClk,'0',ShiftLeftCounterOutput , "00000");	
-	first:addressCounter port map (resetCounter,stateinput,outputCounterToDma , RealOutputCounter );	
+	first:addressCounter port map (resetCounter,stateinput,outputCounterToDma , RealOutputCounter  ,AddresCounterLoad , X, Y , clk );	
 	second:depthNotZero  port map (DMAOutput,RegisterOutput,depth,stateinput,output);
 	third: depthZero    port map (RegisterOutput,bias1,bias2,bias3,bias4,bias5,bias6,bias7,bias8,NumberOfFiltersCounter,depth,stateinput,output);
 	

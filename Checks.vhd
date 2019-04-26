@@ -20,6 +20,7 @@ ARCHITECTURE archCHECKS OF StateChecks IS
 	signal SCNDoutput : std_logic_vector( 3 downto 0);
 	signal SCNLoutput: std_logic_vector(1 downto 0);
 	signal SD : std_logic;
+	signal SDbar:std_logic;
 	signal DepthCounterRst : std_logic;
 BEGIN
 	CNDoutput<=SCNDoutput;
@@ -28,8 +29,9 @@ BEGIN
 	counterNoDepth0: entity work.Counter generic map(4) port map('1',DepthCounterRst,DepthClk,'0',SCNDoutput,"0001");
 	SD <=  '0' when (SCNDoutput = LayerInfo( 12 downto 9 ) ) else '1';
 	D<=SD;
+	SDbar<= not SD;
 	CNLoutput<=SCNLoutput;
-	counterNoLayer0: entity work.Counter generic map(2) port map('1',RST,SD,'0',SCNLoutput,"01");
+	counterNoLayer0: entity work.Counter generic map(2) port map('1',RST,SDbar,'0',SCNLoutput,"01");
 	L <=  '0' when (SCNLoutput = noOfLayers( 1 downto 0 ) ) else '1';
 
 

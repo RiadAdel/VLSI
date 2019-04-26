@@ -22,6 +22,11 @@ signal current_state:state;
 signal FilterAddressEN:std_logic;
 signal FilterAddressIN: std_logic_vector(12 downto 0);
 signal FilterAddressOut: std_logic_vector(12 downto 0);
+-----------------------------------
+signal AddressChangerEN:std_logic;
+signal TriChnagerEN : std_logic;
+signal AddressChangerIN: std_logic_vector(12 downto 0);
+signal AddressChangerOut: std_logic_vector(12 downto 0);
 -------ImgAddReg signals--------
 signal ImgAddRegEN:std_logic;
 signal ImgAddRegIN: std_logic_vector(12 downto 0);
@@ -122,7 +127,11 @@ signal SwitchMEM : std_logic;
 signal CLK : std_logic;
 
 signal ramSelector : std_logic;
+signal TriChnagerToaddEN: std_logic;
 
+
+signal DontRstIndicator : std_logic;
+signal lastFilter : std_logic;
 BEGIN
 ---conditions---
 
@@ -132,9 +141,10 @@ BEGIN
 CLK<= cl and start ;
 SwitchMEM<= '1' when current_state = WRITE_IMG_WIDTH  and ACKI = '1'  else '0';
 
-FilterAddressEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )
+FilterAddressEN <= '1' when ( ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )
  or (current_state = conv_calc_ReadImg_ReadBias  and ACKF = '1' )
-or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  ) else '0';
+or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  or ((current_state = SHLEFT) AND lastFilter = '1' and DontRstIndicator='0')
+ or (  current_state=conv_ReadImg and lastFilter = '1')  ) and LayerInfoOut(15)='0'  )else '0';
 
 TriStateCounterEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )) else '0';
 ImgAddRegEN <= '1' when (current_state = RL and ACKI = '1' ) or (((current_state = Pool_Cal_ReadImg) or (current_state =Pool_Read_Img ) or (current_state=conv_calc_ReadImg_ReadBias)
@@ -150,6 +160,18 @@ ShiftCounterRst<= '1' when (rst='1') or (current_state = SHUP) or ((current_stat
 B<= '0' when ShiftLeftCounterOutput ="11100"  else '1';
 -----------------
 
+AddressChangerEN<= '1' when ( (current_state =conv_calc_ReadImg_ReadBias )   and  (ACKF = '1') ) or ((current_state =CHECKS )) else '0';
+TriChnagerEN<='1' when ((current_state =CHECKS )) else '0';
+
+TriStateAddchanger : entity work.triStateBuffer generic map (13) port map(FilterAddressOut,TriChnagerEN,AddressChangerIN);
+
+TriChnagerToaddEN<='1' when  ((current_state = conv_ReadImg ) or (current_state=SHLEFT ) ) else '0';
+TriStateAddgfd : entity work.triStateBuffer generic map (13) port map(AddressChangerOut,TriChnagerToaddEN,FilterAddressIN);
+	
+
+addChanger:entity work.nBitRegister generic map (n=>13) port map ( AddressChangerIN , clk , rst ,AddressChangerEN , AddressChangerOut );
+
+
 ramSelector <= '1' when current_state = SAVE or current_state = WRITE_IMG_WIDTH
 else '0';
 FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataFIn , DataFOut , ACKF ,counterOutF );
@@ -157,6 +179,8 @@ FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,Add
 ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,SwitchMEM,ramSelector,ReadI,WriteI,clk,dmaStartSignal,ACKI,counterOutI,DataIout);
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataFOut(15 downto 0) , NoOfLayers , AddressF );
+
+
 
 
 FilterAddress:entity work.nBitRegister generic map (n=>13) port map ( FilterAddressIN , clk , rst ,FilterAddressEN , FilterAddressOut );
@@ -174,17 +198,21 @@ ReadLayerInfo:entity work.ReadLayerInfo port map (DataFOut(15 downto 0 ),DataIOu
 
 ClacInfo:entity work.CalculateInfo port map (WidthSquareOut,CounterWidthSquare,LayerInfoOut,clk,rst,current_state , ACKWidth , ACKI ,Wmin1);
 
-RBias:entity work.ReadBias port map (current_state,DataFOut,FilterAddressOut,AddressF,FilterAddressIN,clk,rst,LayerInfoOut,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , ACKF);
+RBias:entity work.ReadBias port map (current_state,DataFOut,FilterAddressOut,AddressF,FilterAddressIN,AddressChangerIN , clk,rst,LayerInfoOut,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , ACKF);
 
-Rfilter:entity work.ReadFilter port map (current_state,LayerInfoOut ,CNDepthoutput ,NumOfHeight  ,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , Q , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 );
+
+
+
+Rfilter:entity work.ReadFilter port map (current_state,LayerInfoOut , CNDepthoutput    , NumOfFilters   , NumOfHeight      ,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , Q , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 ,DontRstIndicator ,lastFilter );
 
 
 RImg : entity work.ReadImage port map (WriteI, current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataIOut ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN);
 
+
 Sconv : entity work.Convolution port map (current_state , clk , rst ,Q, ACKC ,LayerInfoOut, ImgAddRegOut ,OutputImg0(79 downto 0) , OutputImg1(79 downto 0) , OutputImg2(79 downto 0),OutputImg3(79 downto 0),OutputImg4(79 downto 0),Filter1 , Filter2,ConvOuput);
 
 
-Ssave : entity work.saveState port map (DataIOut(15 downto 0) , ConvOuput ,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , CNDepthoutput ,NumOfFilters , rst,current_state , clk , AddressI,RealOutputCounter ,DataIIn , ShiftLeftCounterOutput , ShiftCounterRst);
+Ssave : entity work.saveState port map (DataIOut(15 downto 0) , ConvOuput ,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , CNDepthoutput ,NumOfFilters , rst,current_state , clk , AddressI,RealOutputCounter ,DataIIn , ShiftLeftCounterOutput , ShiftCounterRst  , OutputCounterLoad , X , Y);
 
 
 Istate: entity work.ImageState port map (current_state, WidthSquareOut ,RealOutputCounter, OutputCounterLoad  , ShiftLeftCounterOutput , LayerInfoOut , clk , rst , Q  , NumOfFilters , NumOfHeight , X , Y , K);
@@ -282,10 +310,8 @@ BEGIN
 	
 
 		when CHECKS=>
-			if L = '0' then
-				next_state<=FIN;
-			elsif D='0' then   --- will change before i read img or filter
-			   next_state<=WRITE_IMG_WIDTH;
+			if L = '0'  or D='0'then
+				next_state<=WRITE_IMG_WIDTH;
 			elsif D='1'and LayerInfoOut(15) = '0'  then
 			next_state<=conv_ReadImg;
 			else
@@ -293,8 +319,11 @@ BEGIN
 			end if ;
 
 		 when WRITE_IMG_WIDTH=>
-			if (ACKI'EVENT AND ACKI = '1') then 
-			   next_state<=RL;
+			if (ACKI'EVENT AND ACKI = '1') then
+				if L='0' then  
+			   		next_state<=FIN;
+				else next_state<=RL;
+				end if ;
 			end if ;
 		 when FIN=>
 			

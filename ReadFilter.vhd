@@ -6,13 +6,15 @@ ENTITY ReadFilter IS
 	PORT(	current_state : in state;
 		LayerInfo : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
 		depthcounter : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+		FilterCounter: IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
 		Heightcounter : IN STD_LOGIC_VECTOR( 4 DOWNTO 0);
 		FILTER : IN STD_LOGIC_VECTOR(399 DOWNTO 0);
 		FilterAddress : IN STD_LOGIC_VECTOR(12 DOWNTO 0);
 		msbNoOfFilters,CLK,RST,QImgStat,ACKF : IN std_logic;
 		IndicatorFilter : out std_logic_vector(0 downto 0);
 		DMAAddress,UpdatedAddress :  out STD_LOGIC_VECTOR(12 DOWNTO 0);
-		outFilter0,outFilter1 : out STD_LOGIC_VECTOR(399 DOWNTO 0));
+		outFilter0,outFilter1 : out STD_LOGIC_VECTOR(399 DOWNTO 0);
+		donttrust , LastFilterIND : out std_logic );
 END ReadFilter;
 
 ------------------------------------------------
@@ -28,15 +30,22 @@ ARCHITECTURE DATA_FLOW OF ReadFilter IS
 	signal newAddress:STD_LOGIC_VECTOR(12 DOWNTO 0);
 	signal IndRst: std_logic;
 	signal depthminus :  STD_LOGIC_VECTOR(3 DOWNTO 0);
+	signal FilterMinus:  STD_LOGIC_VECTOR(3 DOWNTO 0);
 	signal Heightminus :  STD_LOGIC_VECTOR( 4 DOWNTO 0);
 	signal dontrstIndicator : std_logic;
+	signal lastFilter : std_logic;
 		
 BEGIN
-	adder2: entity work.my_nadder generic map (4) port map(depthcounter,"1111",'0',depthminus);
-	adder3: entity work.my_nadder generic map (5) port map(Heightcounter,"11111",'0',Heightminus);
-	
-	dontrstIndicator<= '1' when depthminus= LayerInfo(12 downto 9)       and    Heightminus=LayerInfo( 8 downto 4 )             else  '0' ; 
+	adder2: entity work.my_nadder generic map (4) port map( LayerInfo(12 downto 9) ,"1111",'0',depthminus);
+	adder3: entity work.my_nadder generic map (5) port map(LayerInfo( 8 downto 4 ),"11111",'0',Heightminus);
+	adder4: entity work.my_nadder generic map (4) port map(LayerInfo(3 downto 0),"1111",'0',FilterMinus);
 
+	donttrust <= dontrstIndicator;
+	LastFilterIND<= lastFilter;
+
+	
+	dontrstIndicator<= '1' when depthminus= depthcounter    and    Heightminus=Heightcounter  and FilterMinus = FilterCounter  else  '0' ; 
+	lastFilter <= '1' when FilterMinus = FilterCounter  else  '0';
 	IndicatorFilter <=IndicatorF;
 	filter1EN <= '1' when ((current_state = conv_ReadImg_ReadFilter) AND (QImgStat = '0') and (ACKF = '1') ) or ((current_state = CONV) AND (IndicatorF = "0") AND (QImgStat = '1') and (ACKF = '1') ) else '0';
 	filter2EN <= '1' when ((current_state = conv_ReadImg_ReadFilter) AND (QImgStat = '1')and (ACKF = '1')) or ((current_state = CONV) AND (IndicatorF = "0") AND (QImgStat = '0')and (ACKF = '1')) else '0';

@@ -46,6 +46,7 @@ ARCHITECTURE archImgState OF ImageState IS
 	signal adder1b : STD_LOGIC_VECTOR(12 DOWNTO 0);
 	signal FilterCounterRst : std_logic;
 	signal QRST : std_logic;
+	signal newSliceRegEn : std_logic;
 
 	
 BEGIN
@@ -78,13 +79,14 @@ BEGIN
 	counterNoFilters0: entity work.Counter generic map(4) port map('1',FilterCounterRst,cnfCLK,'0',Z,"0001");
 
 	newSliceRegRST <= '1' WHEN ((current_state = CHECKS) OR (RST = '1')) else '0';
-	newSliceReg0: entity work.nBitRegister generic map(13) port map(adder0Out,CLK,newSliceRegRST,YBar,newSliceRegOUT);
+	newSliceRegEn <= '1' when current_state = IMGSTAT and YBar = '1' else '0';
+	newSliceReg0: entity work.nBitRegister generic map(13) port map(adder0Out,CLK,newSliceRegRST,newSliceRegEn,newSliceRegOUT);
 
 
 
 	adder0b<="00000000"&LayerInfoIn(8 downto 4);
 	adder0: entity work.my_nadder generic map(13) port map(newSliceRegOUT,adder0b,'0',adder0Out);
-	triStateBuffer0EN <= '1' WHEN ((Ybar = '1') AND (current_state = IMGSTAT)) else '0';
+	triStateBuffer0EN <= '1' WHEN ((Y = '0') AND (current_state = IMGSTAT)) else '0';
 	triStateBuffer0: entity work.triStateBuffer generic map(13) port map(adder0Out,triStateBuffer0EN,AddresCounterLoad);
 
 	adder1b<="000"&WSquared;

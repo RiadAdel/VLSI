@@ -72,8 +72,12 @@ ACK <=ACKC;
 ImgPixels<= OutputImg4&OutputImg3&OutputImg2&OutputImg1&OutputImg0;
 Filter<= outFilter0 when QImgStat='0' else outFilter1;
 
-FilterToAlu<= Filter when LayerInfo(15)='0' else (others=>'1') ;
 
+
+loop20: FOR i in 0 to 24 Generate
+FilterToAlu((16*(i+1)-1) downto 16*i)<= Filter((16*(i+1)-1) downto 16*i) when LayerInfo(15)='0' else "0000001000000000" ;
+
+end generate;
 
 
 loop3: FOR i in 0 to 24 Generate

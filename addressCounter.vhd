@@ -7,7 +7,9 @@ ENTITY addressCounter IS
 	PORT(	reset:in std_logic;		
 		current_state: IN state;
 		outputAddress : OUT std_logic_vector(12 downto 0); 
-		RealOutputCounter : out std_logic_vector(12 downto 0)
+		RealOutputCounter : out std_logic_vector(12 downto 0);
+		AddresCounterLoad : in STD_LOGIC_VECTOR(12 DOWNTO 0);
+		X , Y , clk  : in std_logic 
 	);
 END ENTITY addressCounter;
 
@@ -34,13 +36,19 @@ END component;
 
 signal outputCounter,input : std_logic_vector(12 downto 0);
 signal enable : std_logic;
+signal counterLoad : std_logic_vector(12 downto 0);
+signal Load : std_logic;
+signal CounterClk : std_logic;
 BEGIN 
 	
 	RealOutputCounter<=outputCounter;
-	
-	myCounter:  Counter  generic map ( 13 ) port map (enable,reset,enable,'0',outputCounter,input);	
+	counterLoad<=AddresCounterLoad;
+	Load<= '1' when    (current_state =IMGSTAT )  and ((X = '0' and Y='1')  or ( Y ='0'))        else '0';
+	myCounter:  Counter  generic map ( 13 ) port map (enable,reset,CounterClk,Load,outputCounter,counterLoad);	
 	outOfAddressCounter:  tristatebuffer  generic map ( 13 ) port map (outputCounter,enable,outputAddress);
 
 
-	Enable <= '1' when current_state = SAVE else'0'; --enable when depth is not zero
+	--Enable <= '1' when current_state = SAVE  or  ((current_state =IMGSTAT )  and ((X = '0' and Y='1')  or ( Y ='0')) )   else'0'; --enable when depth is not zero
+	Enable <= '1' when current_state = SAVE  else'0'; --enable when depth is not zero
+	CounterClk<= '1' when current_state = SAVE   else clk  when   current_state = IMGSTAT  else '0';
 END addressCounterArch;
