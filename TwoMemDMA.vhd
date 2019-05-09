@@ -71,7 +71,7 @@ Dinput <= Normal XOR RamSelector;
 	end process;
 
 
-DFF: D_FF port map (Dinput,clk,Qout,Qbarout);
+---DFF: D_FF port map (Dinput,clk,Qout,Qbarout);
 
 Ram1Rd:  tristatebuffer  generic map ( 448 ) port map (dataFromRam1,ram1Read,dataOut);
 
@@ -86,21 +86,21 @@ Ram1: RAM port map (reset1,CLK,ram1Write,ram1Read,addressIn,dataToRam1,dataFromR
 Ram2: RAM port map (reset2,CLK,ram2Write,ram2Read,addressIn,dataToRam2,dataFromRam2,mfcOfRam2,counterOut2);
 
 --read
-ram2Read <=  '1' when Qout = '1' and readEn ='1' else '0';
-ram1Read <= '1' when Qout = '0' and readEn ='1' else '0';
+ram2Read <=  '1' when Dinput = '1' and readEn ='1' else '0';
+ram1Read <= '1' when Dinput = '0' and readEn ='1' else '0';
 
 --reset
 reset1 <= resetEN ;--when (Qout XNOR ramSelector)  = '1' else '0';
 reset2 <= resetEN ;--when (Qout XOR ramSelector)   = '1' else '0';
 
 --write
-  ram2Write <= '1' when Qout = '1' and writeEn = '1' else '0' ;
-  ram1Write <= '1' when Qout = '0' and writeEn = '1' else '0' ;
+  ram2Write <= '1' when Dinput = '1' and writeEn = '1' else '0' ;
+  ram1Write <= '1' when Dinput = '0' and writeEn = '1' else '0' ;
 
 --mfc happens in both write and read
-MFC <=        mfcOfRam1 when ramSelector = '0' and Qout = '0' else --read and no toggle happened(toggle 2 times = no toggle)
-	      mfcOfRam1 when ramSelector = '1' and Qout = '0' else --write and toggle happened
-	      mfcOfRam2 when ramSelector = '1' and Qout = '1' else --write and no toggle
-	      mfcOfRam2 when ramSelector = '0' and Qout = '1'; 	   --read with toggle
+MFC <=        mfcOfRam1 when ramSelector = '0' and Dinput = '0' else --read and no toggle happened(toggle 2 times = no toggle)
+	      mfcOfRam1 when ramSelector = '1' and Dinput = '0' else --write and toggle happened
+	      mfcOfRam2 when ramSelector = '1' and Dinput = '1' else --write and no toggle
+	      mfcOfRam2 when ramSelector = '0' and Dinput = '1'; 	   --read with toggle
 end DMAmemory;
 

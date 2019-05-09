@@ -132,6 +132,7 @@ signal TriChnagerToaddEN: std_logic;
 
 signal DontRstIndicator : std_logic;
 signal lastFilter : std_logic;
+signal LastHeight , lastDepthOut : std_logic;
 BEGIN
 ---conditions---
 
@@ -143,7 +144,7 @@ SwitchMEM<= '1' when current_state = WRITE_IMG_WIDTH  and ACKI = '1'  else '0';
 
 FilterAddressEN <= '1' when ( ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )
  or (current_state = conv_calc_ReadImg_ReadBias  and ACKF = '1' )
-or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  or ((current_state = SHLEFT) AND lastFilter = '1' and DontRstIndicator='0')
+or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  or ((current_state = SHLEFT) AND (   LastHeight='0' and not(K ='1' and lastDepthOut = '1')  and  (lastFilter = '1' or  LayerInfoOut(3 downto 0) = "0001" )  ) )
  or (  current_state=conv_ReadImg and lastFilter = '1')  ) and LayerInfoOut(15)='0'  )else '0';
 
 TriStateCounterEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )) else '0';
@@ -160,8 +161,8 @@ ShiftCounterRst<= '1' when (rst='1') or (current_state = SHUP) or ((current_stat
 B<= '0' when ShiftLeftCounterOutput ="11100"  else '1';
 -----------------
 
-AddressChangerEN<= '1' when ( (current_state =conv_calc_ReadImg_ReadBias )   and  (ACKF = '1') ) or ((current_state =CHECKS )) else '0';
-TriChnagerEN<='1' when ((current_state =CHECKS )) else '0';
+AddressChangerEN<= '1' when ( (current_state =conv_calc_ReadImg_ReadBias )   and  (ACKF = '1') ) or ((current_state =SHLEFT ) and lastFilter = '1') else '0';
+TriChnagerEN<='1' when ((current_state =SHLEFT )) else '0';
 
 TriStateAddchanger : entity work.triStateBuffer generic map (13) port map(FilterAddressOut,TriChnagerEN,AddressChangerIN);
 
@@ -203,10 +204,10 @@ RBias:entity work.ReadBias port map (current_state,DataFOut,FilterAddressOut,Add
 
 
 
-Rfilter:entity work.ReadFilter port map (current_state,LayerInfoOut , CNDepthoutput    , NumOfFilters   , NumOfHeight      ,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , Q , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 ,DontRstIndicator ,lastFilter );
+Rfilter:entity work.ReadFilter port map (current_state,LayerInfoOut , CNDepthoutput    , NumOfFilters   , NumOfHeight      ,DataFOut ,FilterAddressOut ,LayerInfoOut(14) , clk , rst , Q , ACKF , IndicatorF ,AddressF,FilterAddressIN ,Filter1 , Filter2 ,DontRstIndicator ,lastFilter  , LastHeight , lastDepthOut);
 
 
-RImg : entity work.ReadImage port map (WriteI, current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataIOut ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN);
+RImg : entity work.ReadImage port map (WriteI, current_state , clk , rst , ACKI ,ImgAddRegOut, ImgWidthOut ,  DataIOut ,OutputImg0 , OutputImg1 , OutputImg2,OutputImg3,OutputImg4,OutputImg5,ImgCounterOuput,AddressI,ImgAddRegIN , IndicatorI , ImgRegEN , DontRstIndicator);
 
 
 Sconv : entity work.Convolution port map (current_state , clk , rst ,Q, ACKC ,LayerInfoOut, ImgAddRegOut ,OutputImg0(79 downto 0) , OutputImg1(79 downto 0) , OutputImg2(79 downto 0),OutputImg3(79 downto 0),OutputImg4(79 downto 0),Filter1 , Filter2,ConvOuput);
@@ -251,7 +252,7 @@ BEGIN
 			end if ;
 		-- error done
 		when Pool_Read_Img=>
-			if  (ImgCounterOuput = "100") then 
+			if  (ImgCounterOuput = "100" and LayerInfoOut(14)='1') or (ImgCounterOuput = "010" and LayerInfoOut(14)='0')  then 
 					if (ACKI'EVENT AND ACKI = '1') then
 						next_state<= CONV;
 					end if ;
@@ -267,7 +268,7 @@ BEGIN
 			end if ;
 		-- error done
 		when conv_ReadImg=>
-			if (ImgCounterOuput = "100") then 
+			if (ImgCounterOuput = "100" and LayerInfoOut(14)='1') or (ImgCounterOuput = "010" and LayerInfoOut(14)='0')then 
 						if (ACKI'EVENT AND ACKI = '1') then
 							next_state<=CONV;
 						end if ;

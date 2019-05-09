@@ -14,7 +14,7 @@ ENTITY ReadFilter IS
 		IndicatorFilter : out std_logic_vector(0 downto 0);
 		DMAAddress,UpdatedAddress :  out STD_LOGIC_VECTOR(12 DOWNTO 0);
 		outFilter0,outFilter1 : out STD_LOGIC_VECTOR(399 DOWNTO 0);
-		donttrust , LastFilterIND : out std_logic );
+		donttrust , LastFilterIND  , LastHeightOut , lastDepthOut: out std_logic );
 END ReadFilter;
 
 ------------------------------------------------
@@ -34,17 +34,23 @@ ARCHITECTURE DATA_FLOW OF ReadFilter IS
 	signal Heightminus :  STD_LOGIC_VECTOR( 4 DOWNTO 0);
 	signal dontrstIndicator : std_logic;
 	signal lastFilter : std_logic;
+	signal LastHeight : std_logic;
+	signal FixIssue : std_logic;
+	signal LastDepth : std_logic;
 		
 BEGIN
 	adder2: entity work.my_nadder generic map (4) port map( LayerInfo(12 downto 9) ,"1111",'0',depthminus);
 	adder3: entity work.my_nadder generic map (5) port map(LayerInfo( 8 downto 4 ),"11111",'0',Heightminus);
 	adder4: entity work.my_nadder generic map (4) port map(LayerInfo(3 downto 0),"1111",'0',FilterMinus);
 
+	LastHeightOut<= LastHeight;
 	donttrust <= dontrstIndicator;
 	LastFilterIND<= lastFilter;
-
+	lastDepthOut <= LastDepth;
 	
-	dontrstIndicator<= '1' when depthminus= depthcounter    and    Heightminus=Heightcounter  and FilterMinus = FilterCounter  else  '0' ; 
+	LastDepth<= '1' when depthcounter = depthminus else '0';
+	LastHeight <='1' when   Heightminus=Heightcounter else '0';
+	dontrstIndicator<= '1' when  Heightminus=Heightcounter  and ( FilterMinus = FilterCounter or LayerInfo(3 downto 0) = "0001" )  else  '0' ; 
 	lastFilter <= '1' when FilterMinus = FilterCounter  else  '0';
 	IndicatorFilter <=IndicatorF;
 	filter1EN <= '1' when ((current_state = conv_ReadImg_ReadFilter) AND (QImgStat = '0') and (ACKF = '1') ) or ((current_state = CONV) AND (IndicatorF = "0") AND (QImgStat = '1') and (ACKF = '1') ) else '0';
@@ -66,7 +72,8 @@ BEGIN
 	-- DFFCLK <= '1' when (current_state = CONV AND ACKF='1' and (CLK'event and CLK='1')  ) else '0';
 	Qbar <= NOT(IndicatorF);
 	
-	IndRst<= '1' when ((current_state = SHLEFT ) and (dontrstIndicator='0'))   or  RST = '1'  else '0';
+	FixIssue <= '1' when dontrstIndicator = '1' and depthcounter = depthminus else '0';
+	IndRst<= '1' when ((current_state = SHLEFT ) and (FixIssue = '0' ))   or  RST = '1'  else '0';
 	DDF0 : entity work.nBitRegister generic map (1) port map(Qbar,DFFCLK,IndRst,'1',IndicatorF);
 
 	

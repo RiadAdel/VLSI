@@ -22,7 +22,8 @@ entity ReadImage is
     ImgAddToDma : out std_logic_vector(12 downto 0);
     UpdatedAddress : out std_logic_vector(12 downto 0);
     ImgIndic: out std_logic_vector(0 downto 0);
-    ImgEn : out std_logic_vector(5 downto 0) );
+    ImgEn : out std_logic_vector(5 downto 0);
+    dontTrust: in std_logic  );
 end ReadImage;
 
 architecture archRI of ReadImage is
@@ -94,7 +95,7 @@ architecture archRI of ReadImage is
   --DFFCLK <= '1' when ((current_state = CONV) AND (ACK='1') and (CLK'event and CLK='1')  ) else '0';
 	Qbar <= NOT(IndicatorImage);
 	
-	IndRst<= '1' when current_state = SHUP  or  RST = '1' else '0';
+	IndRst<= '1' when (current_state = SHUP  and dontTrust='0') or  RST = '1' else '0';
 	DDF0 :entity work.nBitRegister generic map (1) port map(Qbar,DFFCLK,IndRst,'1',IndicatorImage);
 
 
