@@ -45,7 +45,7 @@ signal CounterOut : std_logic_vector(2 downto 0);
 signal CountereEN : std_logic;
 signal ACKC : std_logic;
 signal CountereRST : std_logic;
-
+signal SecondInputToMult : std_logic_vector(143 downto 0);
 
 
 Begin
@@ -80,7 +80,15 @@ FilterToAlu((16*(i+1)-1) downto 16*i)<= Filter((16*(i+1)-1) downto 16*i) when La
 end generate;
 
 
-loop3: FOR i in 0 to 24 Generate
+loop3: FOR i in 0 to 8 Generate
+
+
+SecondInputToMult((16*(i+1)-1) downto 16*i) <= ImgPixels((16*(i+1)-1) downto 16*i) when LayerInfo(14)='1' else ImgPixels( ((i mod 3 )+5 *( i /3) +1  ) *16  -1        downto  ((i mod 3 )+5 *( i /3) ) *16       )    ;
+Multip:entity work.Multiplier generic map (n=>16) port map ( FilterToAlu((16*(i+1)-1) downto 16*i) , SecondInputToMult((16*(i+1)-1) downto 16*i) ,MultiplierOut((32*(i+1)-1) downto 32*i)  );
+
+end generate ;
+
+loop5: FOR i in 9 to 24 Generate
 
 Multip:entity work.Multiplier generic map (n=>16) port map ( FilterToAlu((16*(i+1)-1) downto 16*i) , ImgPixels((16*(i+1)-1) downto 16*i) ,MultiplierOut((32*(i+1)-1) downto 32*i)  );
 
@@ -97,25 +105,35 @@ MultiplierOut16((16*(i+1)-1) downto 16*i) <= MultiplierOut( ((32*(i+1)-1)-7)   d
 end generate ;
 
 
---- 3*3 adders
 adder1 : entity work.my_nadder generic map (16) port map(MultiplierOut16(15 downto 0 ),MultiplierOut16( 31 downto 16 ),'0',AddOutputLvL1( 15 downto 0));
-adder2 : entity work.my_nadder generic map (16) port map(MultiplierOut16(47 downto 32 ),MultiplierOut16( 95 downto 80 ),'0',AddOutputLvL1( 31 downto 16));
-adder3 : entity work.my_nadder generic map (16) port map(MultiplierOut16(111 downto 96 ),MultiplierOut16( 127 downto 112 ),'0',AddOutputLvL1( 47 downto 32));
-adder4 : entity work.my_nadder generic map (16) port map(MultiplierOut16(175 downto 160 ),MultiplierOut16( 191 downto 176 ),'0',AddOutputLvL1( 63 downto 48));
+adder2 : entity work.my_nadder generic map (16) port map(MultiplierOut16(47 downto 32 ),MultiplierOut16(63 downto 48 ),'0',AddOutputLvL1( 31 downto 16));
+adder3 : entity work.my_nadder generic map (16) port map(MultiplierOut16( 79 downto 64 ),MultiplierOut16( 95 downto 80 ),'0',AddOutputLvL1( 47 downto 32));
+adder4 : entity work.my_nadder generic map (16) port map(MultiplierOut16(111 downto 96 ),MultiplierOut16( 127 downto 112 ),'0',AddOutputLvL1( 63 downto 48));
+
+
+
+
+--- 3*3 adders
+--adder1 : entity work.my_nadder generic map (16) port map(MultiplierOut16(15 downto 0 ),MultiplierOut16( 31 downto 16 ),'0',AddOutputLvL1( 15 downto 0));
+--adder2 : entity work.my_nadder generic map (16) port map(MultiplierOut16(47 downto 32 ),MultiplierOut16( 95 downto 80 ),'0',AddOutputLvL1( 31 downto 16));
+--adder3 : entity work.my_nadder generic map (16) port map(MultiplierOut16(111 downto 96 ),MultiplierOut16( 127 downto 112 ),'0',AddOutputLvL1( 47 downto 32));
+--adder4 : entity work.my_nadder generic map (16) port map(MultiplierOut16(175 downto 160 ),MultiplierOut16( 191 downto 176 ),'0',AddOutputLvL1( 63 downto 48));
 
 adder12 : entity work.my_nadder generic map (16) port map(AddOutputLvL1( 15 downto 0),AddOutputLvL1( 31 downto 16),'0',AddOutputLvL2( 15 downto 0));
 adder13 : entity work.my_nadder generic map (16) port map(AddOutputLvL1( 47 downto 32),AddOutputLvL1( 63 downto 48),'0',AddOutputLvL2( 31 downto 16));
 
 adder18 : entity work.my_nadder generic map (16) port map(AddOutputLvL2( 15 downto 0),AddOutputLvL2( 31 downto 16),'0',AddOutputLvL3( 15 downto 0));
 
-adder21 : entity work.my_nadder generic map (16) port map(AddOutputLvL3( 15 downto 0),MultiplierOut16( 207 downto 192 ),'0',AddOut33);
+adder21 : entity work.my_nadder generic map (16) port map(AddOutputLvL3( 15 downto 0),MultiplierOut16(143 downto 128 ),'0',AddOut33);
+
+-- adder21 : entity work.my_nadder generic map (16) port map(AddOutputLvL3( 15 downto 0),MultiplierOut16(207 downto 192 ),'0',AddOut33);
 
 
 
 
 -- 5*5 adders
-adder5 : entity work.my_nadder generic map (16) port map(MultiplierOut16(63 downto 48 ),MultiplierOut16( 79 downto 64 ),'0',AddOutputLvL1( 79 downto 64));
-adder6 : entity work.my_nadder generic map (16) port map(MultiplierOut16(143 downto 128 ),MultiplierOut16( 159 downto 144 ),'0',AddOutputLvL1( 95 downto 80));
+adder5 : entity work.my_nadder generic map (16) port map(MultiplierOut16( 159 downto 144 ),MultiplierOut16(175 downto 160 ),'0',AddOutputLvL1( 79 downto 64));
+adder6 : entity work.my_nadder generic map (16) port map(MultiplierOut16( 191 downto 176 ),MultiplierOut16( 207 downto 192 ),'0',AddOutputLvL1( 95 downto 80));
 adder7 : entity work.my_nadder generic map (16) port map(MultiplierOut16(223 downto 208 ),MultiplierOut16( 239 downto 224 ),'0',AddOutputLvL1( 111 downto 96));
 
 adder8 : entity work.my_nadder generic map (16) port map(MultiplierOut16(255 downto 240 ),MultiplierOut16( 271 downto 256 ),'0',AddOutputLvL1( 127 downto 112));
@@ -123,6 +141,24 @@ adder9 : entity work.my_nadder generic map (16) port map(MultiplierOut16(287 dow
 adder10 : entity work.my_nadder generic map (16) port map(MultiplierOut16(319 downto 304 ),MultiplierOut16( 335 downto 320 ),'0',AddOutputLvL1( 159 downto 144));
 adder11 : entity work.my_nadder generic map (16) port map(MultiplierOut16(351 downto 336 ),MultiplierOut16( 367 downto 352 ),'0',AddOutputLvL1( 175 downto 160));
 adder0 : entity work.my_nadder generic map (16) port map(MultiplierOut16(383 downto 368 ),MultiplierOut16( 399 downto 384 ),'0',AddOutputLvL1( 191 downto 176));
+
+
+
+
+
+
+
+
+
+--adder5 : entity work.my_nadder generic map (16) port map(MultiplierOut16(63 downto 48 ),MultiplierOut16( 79 downto 64 ),'0',AddOutputLvL1( 79 downto 64));
+--adder6 : entity work.my_nadder generic map (16) port map(MultiplierOut16(143 downto 128 ),MultiplierOut16( 159 downto 144 ),'0',AddOutputLvL1( 95 downto 80));
+--adder7 : entity work.my_nadder generic map (16) port map(MultiplierOut16(223 downto 208 ),MultiplierOut16( 239 downto 224 ),'0',AddOutputLvL1( 111 downto 96));
+
+--adder8 : entity work.my_nadder generic map (16) port map(MultiplierOut16(255 downto 240 ),MultiplierOut16( 271 downto 256 ),'0',AddOutputLvL1( 127 downto 112));
+--adder9 : entity work.my_nadder generic map (16) port map(MultiplierOut16(287 downto 272 ),MultiplierOut16( 303 downto 288 ),'0',AddOutputLvL1( 143 downto 128));
+--adder10 : entity work.my_nadder generic map (16) port map(MultiplierOut16(319 downto 304 ),MultiplierOut16( 335 downto 320 ),'0',AddOutputLvL1( 159 downto 144));
+--adder11 : entity work.my_nadder generic map (16) port map(MultiplierOut16(351 downto 336 ),MultiplierOut16( 367 downto 352 ),'0',AddOutputLvL1( 175 downto 160));
+--adder0 : entity work.my_nadder generic map (16) port map(MultiplierOut16(383 downto 368 ),MultiplierOut16( 399 downto 384 ),'0',AddOutputLvL1( 191 downto 176));
 
 adder14 : entity work.my_nadder generic map (16) port map(AddOutputLvL1( 79 downto 64),AddOutputLvL1( 95 downto 80),'0',AddOutputLvL2( 47 downto 32));
 adder15 : entity work.my_nadder generic map (16) port map(AddOutputLvL1( 111 downto 96),AddOutputLvL1( 127 downto 112),'0',AddOutputLvL2( 63 downto 48));

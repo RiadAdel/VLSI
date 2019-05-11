@@ -44,7 +44,7 @@ BEGIN
 	adder4: entity work.my_nadder generic map (4) port map(LayerInfo(3 downto 0),"1111",'0',FilterMinus);
 
 	LastHeightOut<= LastHeight;
-	donttrust <= dontrstIndicator;
+	donttrust <= LastHeight;
 	LastFilterIND<= lastFilter;
 	lastDepthOut <= LastDepth;
 	

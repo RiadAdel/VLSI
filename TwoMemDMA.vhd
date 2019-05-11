@@ -11,7 +11,8 @@ entity memoryDMA is
 		switcherEN:in std_logic;		     -- exchange input ram with output ram
 		ramSelector:in std_logic;                    -- -0 for input ram(i want to read from) ,1 for output ram(i want to save in)
 		readEn,writeEn,CLK: in std_logic;	
-		Normal: inout std_logic;		     --just set it to 0 when start
+		Normal: in std_logic;		     --just set it to 0 when start
+	
 		MFC:out std_logic;		
 		counterOut:out std_logic_vector(3 downto 0);
 		dataOut : out std_logic_vector(447 downto 0)); 
@@ -55,29 +56,45 @@ Signal DInput,Qout,Qbarout           :std_logic;
 Signal reset1,reset2	             :std_logic;
 Signal testout :std_logic_vector(15 downto 0);
 
-Signal ram1Read,ram1Write,ram2Read,ram2Write :std_logic;
+Signal ram1Read,ram1Write,ram2Read,ram2Write,NormalOut,switcherr :std_logic;
+
+signal test : std_logic;
+
 --------- 
 begin	
 
-Dinput <= Normal XOR RamSelector;
+Dinput <= switcherr XOR RamSelector;
 
-	process(switcherEN)
+	process(normal,clk)
+		begin
+
+		if(normal ='0') then
+				normalOut <= '0';
+		 
+		end if;
+	end process;
+	process(switcherEN,normalout)
 		begin
 
 		if(switcherEN='1') then
-				Normal <= not Normal;
-		else Normal <= Normal;
+				switcherr <= not normalout;
+				
+		else switcherr <= normalout;
+		     
 		end if;
 	end process;
 
 
 ---DFF: D_FF port map (Dinput,clk,Qout,Qbarout);
 
-Ram1Rd:  tristatebuffer  generic map ( 448 ) port map (dataFromRam1,ram1Read,dataOut);
+
+test<= not (Dinput);
+
+Ram1Rd:  tristatebuffer  generic map ( 448 ) port map (dataFromRam1,test,dataOut);
 
 Ram1Wr: tristatebuffer  generic map ( 16 )  port map (dataIn,ram1Write,dataToRam1); --dataFromTORam1(15 downto 0)
 
-Ram2Rd:  tristatebuffer  generic map ( 448 ) port map (dataFromRam2,ram2Read,dataOut);
+Ram2Rd:  tristatebuffer  generic map ( 448 ) port map (dataFromRam2,Dinput,dataOut);
 
 Ram2Wr: tristatebuffer  generic map ( 16 )  port map (dataIn,ram2Write,dataToRam2);
 
@@ -103,4 +120,3 @@ MFC <=        mfcOfRam1 when ramSelector = '0' and Dinput = '0' else --read and 
 	      mfcOfRam2 when ramSelector = '1' and Dinput = '1' else --write and no toggle
 	      mfcOfRam2 when ramSelector = '0' and Dinput = '1'; 	   --read with toggle
 end DMAmemory;
-

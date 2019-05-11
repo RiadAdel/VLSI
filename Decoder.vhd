@@ -24,9 +24,9 @@ begin
 	elsif input="011" then
 		output<="001000";
 	elsif input="100" then
-		output<="010010";
+		output<="010000";
 	elsif input="101" then
-		output<="100010";
+		output<="100000";
 	end if ;
 end process;
 

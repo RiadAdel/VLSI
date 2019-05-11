@@ -39,12 +39,13 @@ signal enable : std_logic;
 signal counterLoad : std_logic_vector(12 downto 0);
 signal Load : std_logic;
 signal CounterClk : std_logic;
+signal CounterRest:std_logic;
 BEGIN 
-	
+	CounterRest<= '1' when reset = '1' or current_state = CHECKS     else '0';
 	RealOutputCounter<=outputCounter;
 	counterLoad<=AddresCounterLoad;
 	Load<= '1' when    (current_state =IMGSTAT )  and ((X = '0' and Y='1')  or ( Y ='0'))        else '0';
-	myCounter:  Counter  generic map ( 13 ) port map (enable,reset,CounterClk,Load,outputCounter,counterLoad);	
+	myCounter:  Counter  generic map ( 13 ) port map (enable,CounterRest,CounterClk,Load,outputCounter,counterLoad);	
 	outOfAddressCounter:  tristatebuffer  generic map ( 13 ) port map (outputCounter,enable,outputAddress);
 
 

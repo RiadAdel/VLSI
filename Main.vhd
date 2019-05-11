@@ -123,7 +123,9 @@ signal WriteSave: std_logic;
 signal SaveAckLatch :std_logic;
 signal DepthGreatZero :std_logic;
 
-signal SwitchMEM : std_logic;
+signal SwitchMEM : std_logic_vector(0 downto 0);
+signal SwitchBar : std_logic_vector(0 downto 0);
+signal SwitchClk : std_logic;
 signal CLK : std_logic;
 
 signal ramSelector : std_logic;
@@ -133,6 +135,13 @@ signal TriChnagerToaddEN: std_logic;
 signal DontRstIndicator : std_logic;
 signal lastFilter : std_logic;
 signal LastHeight , lastDepthOut : std_logic;
+
+
+signal TestOuput : std_logic_vector(15 downto 0);
+
+signal ImgAddEQ1TriIN : std_logic_vector(12 downto 0);
+signal ImgAddEQ1TriEN : std_logic;
+
 BEGIN
 ---conditions---
 
@@ -140,17 +149,30 @@ BEGIN
 
 
 CLK<= cl and start ;
-SwitchMEM<= '1' when current_state = WRITE_IMG_WIDTH  and ACKI = '1'  else '0';
+
+--SwitchMEM(0)<= '1' when current_state = WRITE_IMG_WIDTH  and ACKI = '1'  else '0';
+
+SwitchBar <= NOT(SwitchMEM);
+	
+SwitchClk<= '1' when current_state = WRITE_IMG_WIDTH  and ACKI = '1'  else '0';
+
+DDF0 :entity work.nBitRegister generic map (1) port map(SwitchBar,SwitchClk,rst,'1',SwitchMEM);
+
+
+
+
+
+
 
 FilterAddressEN <= '1' when ( ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )
  or (current_state = conv_calc_ReadImg_ReadBias  and ACKF = '1' )
-or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  or ((current_state = SHLEFT) AND (   LastHeight='0' and not(K ='1' and lastDepthOut = '1')  and  (lastFilter = '1' or  LayerInfoOut(3 downto 0) = "0001" )  ) )
+or ((current_state = conv_ReadImg_ReadFilter and ACKF = '1') or ((current_state = CONV) AND (IndicatorF = "0") and ACKF = '1'))  or ( (current_state = SHLEFT) AND (  (LayerInfoOut(3 downto 0) = "0001" or  lastFilter='1' )  and not ( ( LastHeight = '1' or NumOfHeight = LayerInfoOut(8 downto 4)  )and lastDepthOut='1' )        ))
  or (  current_state=conv_ReadImg and lastFilter = '1')  ) and LayerInfoOut(15)='0'  )else '0';
 
 TriStateCounterEN <= '1' when ((current_state = RI and ACKF = '1' ) or (current_state = RL and ACKF = '1' )) else '0';
 ImgAddRegEN <= '1' when (current_state = RL and ACKI = '1' ) or (((current_state = Pool_Cal_ReadImg) or (current_state =Pool_Read_Img ) or (current_state=conv_calc_ReadImg_ReadBias)
 	or (current_state =conv_ReadImg_ReadFilter ) or (current_state = conv_ReadImg)) and ACKI = '1') 
-	or ((current_state = CONV) and (IndicatorI = "0") and (ACKI = '1') )  else '0';
+	or ((current_state = CONV) and (IndicatorI = "0") and (ACKI = '1') )   else '0';
 
 
 ImgAddACKTriEN<='1' when (current_state = RL ) else '0';
@@ -161,8 +183,8 @@ ShiftCounterRst<= '1' when (rst='1') or (current_state = SHUP) or ((current_stat
 B<= '0' when ShiftLeftCounterOutput ="11100"  else '1';
 -----------------
 
-AddressChangerEN<= '1' when ( (current_state =conv_calc_ReadImg_ReadBias )   and  (ACKF = '1') ) or ((current_state =SHLEFT ) and lastFilter = '1') else '0';
-TriChnagerEN<='1' when ((current_state =SHLEFT )) else '0';
+AddressChangerEN<= '1' when ( (current_state =conv_calc_ReadImg_ReadBias )   and  (ACKF = '1') ) or ((current_state =IMGSTAT ) and (  ( (LayerInfoOut(3 downto 0) = "0001" or  lastFilter='1' )  and LastHeight='1' and ShiftLeftCounterOutput = LayerInfoOut(8 downto 4)  )  ) ) else '0';
+TriChnagerEN<='1' when ((current_state =IMGSTAT )) else '0';
 
 TriStateAddchanger : entity work.triStateBuffer generic map (13) port map(FilterAddressOut,TriChnagerEN,AddressChangerIN);
 
@@ -177,7 +199,10 @@ ramSelector <= '1' when current_state = SAVE or current_state = WRITE_IMG_WIDTH
 else '0';
 FilterMem:entity work.RAM generic map (X=>25) port map (rst,clk,WriteF,ReadF,AddressF , DataFIn , DataFOut , ACKF ,counterOutF );
 
-ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,SwitchMEM,ramSelector,ReadI,WriteI,clk,dmaStartSignal,ACKI,counterOutI,DataIout);
+
+ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,SwitchMEM(0),ramSelector,ReadI,WriteI,clk,'0',ACKI,counterOutI,DataIout);
+
+--ImgMem:entity work.memoryDMA port map (rst,AddressI,DataIIn,SwitchMEM(0),ramSelector,ReadI,WriteI,clk,dmaStartSignal,ACKI,counterOutI,DataIout);
 
 ReadInf:entity work.ReadInfoState  port map (clk,current_state , rst , ACKF , FilterAddressOut , DataFOut(15 downto 0) , NoOfLayers , AddressF );
 
@@ -189,9 +214,15 @@ AdderTryState:entity work.triStateBuffer generic map (n=>13) port map ( TriState
 FilterAddressAdder:entity work.my_nadder generic map (n=>13) port map ( FilterAddressOut ,"0000000000000" ,'1', TriStateCounterOUT);
 
 
-ImgAddRST<='1' when rst='1' or current_state=CHECKS else '0';
+ImgAddRST<='1' when rst='1' or current_state = WRITE_IMG_WIDTH  else '0';
+
+--ImgAddEQ1TriIN<= "0000000000001";
+--ImgAddEQ1TriEN <= '1' when  current_state=WRITE_IMG_WIDTH else '0';
+--ImgAddEQ1:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddEQ1TriIN, ImgAddEQ1TriEN, ImgAddRegIN );
+
 
 ImgAddReg:entity work.nBitRegister generic map (n=>13) port map ( ImgAddRegIN , clk , ImgAddRST ,ImgAddRegEN , ImgAddRegOut );
+
 ImgAddACKTri:entity work.triStateBuffer generic map (n=>13) port map ( ImgAddACKTriIN, ImgAddACKTriEN, ImgAddRegIN );
 --error done
 ReadLayerInfo:entity work.ReadLayerInfo port map (DataFOut(15 downto 0 ),DataIOut(15 downto 0 ),FilterAddressOut,ImgAddRegOut , clk , rst ,ACKF,ACKI,current_state,LayerInfoOut,ImgWidthOut,AddressF,AddressI);
@@ -212,6 +243,7 @@ RImg : entity work.ReadImage port map (WriteI, current_state , clk , rst , ACKI 
 
 Sconv : entity work.Convolution port map (current_state , clk , rst ,Q, ACKC ,LayerInfoOut, ImgAddRegOut ,OutputImg0(79 downto 0) , OutputImg1(79 downto 0) , OutputImg2(79 downto 0),OutputImg3(79 downto 0),OutputImg4(79 downto 0),Filter1 , Filter2,ConvOuput);
 
+--DataIIn <= TestOuput;
 
 Ssave : entity work.saveState port map (DataIOut(15 downto 0) , ConvOuput ,Bias0,Bias1,Bias2,Bias3,Bias4,Bias5,Bias6,Bias7 , CNDepthoutput ,NumOfFilters , rst,current_state , clk , AddressI,RealOutputCounter ,DataIIn , ShiftLeftCounterOutput , ShiftCounterRst  , OutputCounterLoad , X , Y);
 
