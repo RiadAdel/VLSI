@@ -1,0 +1,50 @@
+set_working_dir "/home/ayman/Desktop/Project/output"
+load_library tsmc035_typ
+set resource_sharing FALSE
+read -technology "tsmc035_typ" -dont_elaborate { 
+                                "/home/ayman/Desktop/Project/constants.vhd"
+                                "/home/ayman/Desktop/Project/FC_adder.vhd"
+                                "/home/ayman/Desktop/Project/FC_nadder.vhd"   
+                                "/home/ayman/Desktop/Project/my_adder.vhd"
+                                "/home/ayman/Desktop/Project/my_nadder.vhd"   
+                                "/home/ayman/Desktop/Project/Decoder.vhd"   
+                                "/home/ayman/Desktop/Project/Multiplier.vhd"   
+                                "/home/ayman/Desktop/Project/triStateBuffer.vhd" 
+                                "/home/ayman/Desktop/Project/nBitRegister.vhd" 
+                                "/home/ayman/Desktop/Project/counter.vhd"
+				"/home/ayman/Desktop/Project/8inputsMux.vhd"
+				"/home/ayman/Desktop/Project/addressCounter.vhd"
+				"/home/ayman/Desktop/Project/depthNotZero.vhd"
+				"/home/ayman/Desktop/Project/DepthZero.vhd"
+				"/home/ayman/Desktop/Project/counter.vhd"
+                                "/home/ayman/Desktop/Project/RAM.vhd" 
+				"/home/ayman/Desktop/Project/TwoMemDMA.vhd"
+                                "/home/ayman/Desktop/Project/ReadInfoState.vhd" 
+                                "/home/ayman/Desktop/Project/ReadLayerInfo.vhd" 
+                                "/home/ayman/Desktop/Project/CalculateInfo.vhd" 
+                                "/home/ayman/Desktop/Project/ReadBias.vhd" 
+                                "/home/ayman/Desktop/Project/ReadFilter.vhd" 
+                                "/home/ayman/Desktop/Project/ReadImage.vhd"
+				"/home/ayman/Desktop/Project/Convolution.vhd"
+				"/home/ayman/Desktop/Project/saveState.vhd"
+				"/home/ayman/Desktop/Project/ImageState.vhd"
+				"/home/ayman/Desktop/Project/Checks.vhd"
+				"/home/ayman/Desktop/Project/OutWidthState.vhd"
+                                "/home/ayman/Desktop/Project/Main.vhd"
+                                }
+elaborate Main -architecture vlsi 
+set register2register 100.000000
+set input2register 100.000000
+set register2output 100.000000
+set_clock -name .work.Main.vlsi.cl -clock_cycle "100.000000"
+set_clock -name .work.Main.vlsi.cl -pulse_width "50.000000"
+optimize .work.Main.vlsi -target tsmc035_typ -macro -area -effort quick -hierarchy preserve 
+report_area areaMainfake.rep -cell_usage -hierarchy -all_leafs 
+report_delay delayMainfake.rep -num_paths 1 -longest_path -clock_frequency
+set novendor_constraint_file FALSE
+auto_write -format Verilog MainFinalopt.v
+set novendor_constraint_file FALSE
+auto_write -format VHDL MainFinalopt.vhd
+set novendor_constraint_file FALSE
+auto_write -format SDF MainFinalopt.sdf
+

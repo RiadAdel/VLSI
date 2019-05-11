@@ -1,0 +1,52 @@
+
+
+
+                        Clock Frequency Report
+
+	Clock                : Frequency
+      ------------------------------------
+
+	cl                   : 18.9 MHz
+	ImgAddACKTriIN(0)    : 19.3 MHz
+
+
+                        Critical Path Report
+
+
+Critical path #1, (path slack = 46.1):
+
+NAME                                                        GATE              ARRIVAL              LOAD
+-------------------------------------------------------------------------------------------------------
+cl (offset)                                                                 0.00 (falling edge)
+delay thru clock network                                                    50.00 (worst case)
+pulse width                                                             50.00
+ReadLayerInfo/LayerInf/reg_Q(4)/CLK                         dffr              50.00 (falling edge)
+
+
+ReadLayerInfo/LayerInf/reg_Q(4)/Q                           dffr        0.00  50.51 dn             0.02
+ix10391/Y                                                   buf02       0.24  50.76 dn             0.04
+Rfilter/adder3/f0/ix70/Y                                    xnor2       0.22  50.98 up             0.03
+Rfilter/adder3/f0/ix1/Y                                     inv01       0.10  51.08 dn             0.01
+Rfilter/adder3/f0/ix7/Y                                     ao22        0.39  51.47 dn             0.03
+Rfilter/adder3/loop1_1_fx/ix7/Y                             ao22        0.38  51.85 dn             0.03
+Rfilter/adder3/loop1_2_fx/ix7/Y                             ao22        0.38  52.23 dn             0.03
+Rfilter/adder3/loop1_3_fx/ix7/Y                             ao22        0.36  52.59 dn             0.03
+Rfilter/adder3/loop1_4_fx/ix9/Y                             xnor2       0.19  52.78 up             0.02
+Rfilter/ix1496/Y                                            xnor2       0.20  52.98 dn             0.01
+Rfilter/ix1492/Y                                            nand03      0.23  53.21 up             0.02
+Rfilter/ix33/Y                                              nor03_2x    0.21  53.42 dn             0.02
+Rfilter/ix97/Y                                              nand03      0.22  53.64 up             0.01
+Rfilter/ix101/Y                                             ao21        0.27  53.91 up             0.02
+Rfilter/DDF0/reg_Q(0)/R                                     dffr        0.00  53.91 up             0.00
+data arrival time                                                             53.91
+
+
+data required time  (default specified - setup time)                           100.00
+-------------------------------------------------------------------------------------------------------
+data required time                                                            100.00
+data arrival time                                                             53.91
+                                                                           ----------
+slack                                                                        46.09
+-------------------------------------------------------------------------------------------------------
+
+

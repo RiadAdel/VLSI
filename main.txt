@@ -14,8 +14,8 @@ vsim -gui work.main
 # Loading work.readinfostate(archreadinfostate)
 # Loading work.nbitregister(data_flow)
 # Loading work.tristatebuffer(tribuffer)
-mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/ram
-mem load -i {Z:/cmp 2020/vlsi/CNN/FilterMemory.mem} /main/FilterMem/ram
+#mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/ram
+#mem load -i {Z:/cmp 2020/vlsi/CNN/FilterMemory.mem} /main/FilterMem/ram
 add wave -position insertpoint sim:/main/*
 add wave -position insertpoint sim:/main/vsim -gui work.main
 # vsim -gui work.main 
@@ -33,8 +33,8 @@ add wave -position insertpoint sim:/main/vsim -gui work.main
 # Loading work.readinfostate(archreadinfostate)
 # Loading work.nbitregister(data_flow)
 # Loading work.tristatebuffer(tribuffer)
-mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/ram
-mem load -i {Z:/cmp 2020/vlsi/CNN/FilterMemory.mem} /main/FilterMem/ram
+#mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/ram
+#mem load -i {Z:/cmp 2020/vlsi/CNN/FilterMemory.mem} /main/FilterMem/ram
 add wave -position insertpoint sim:/main/*
 add wave -position insertpoint sim:/main/vsim -gui work.main
 # vsim -gui work.main 
@@ -52,9 +52,12 @@ add wave -position insertpoint sim:/main/vsim -gui work.main
 # Loading work.readinfostate(archreadinfostate)
 # Loading work.nbitregister(data_flow)
 # Loading work.tristatebuffer(tribuffer)
-mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/Ram1/ram
-mem load -i {Z:/cmp 2020/vlsi/CNN/outputMemory.mem} /main/ImgMem/Ram2/ram
-mem load -i {Z:/cmp 2020/vlsi/CNN/FilterMemory.mem} /main/FilterMem/ram
+#mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/Ram1/ram
+#mem load -i {Z:/cmp 2020/vlsi/CNN/outputMemory.mem} /main/ImgMem/Ram2/ram
+#mem load -i {Z:/cmp 2020/vlsi/CNN/FilterMemory.mem} /main/FilterMem/ram
+mem load -i /home/ayman/Desktop/Project/FilterMemory.mem /main/FilterMem/ram
+mem load -i /home/ayman/Desktop/Project/ImgMemory.mem /main/ImgMem/Ram1/ram
+mem load -i /home/ayman/Desktop/Project/outputMemory.mem /main/ImgMem/Ram2/ram
 add wave -position insertpoint sim:/main/*
 
 force -freeze sim:/main/rst 1 0
