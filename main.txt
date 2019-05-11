@@ -52,18 +52,30 @@ add wave -position insertpoint sim:/main/vsim -gui work.main
 # Loading work.readinfostate(archreadinfostate)
 # Loading work.nbitregister(data_flow)
 # Loading work.tristatebuffer(tribuffer)
-mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/ram
+mem load -i {Z:/cmp 2020/vlsi/CNN/ImgMemory.mem} /main/ImgMem/Ram1/ram
+mem load -i {Z:/cmp 2020/vlsi/CNN/outputMemory.mem} /main/ImgMem/Ram2/ram
 mem load -i {Z:/cmp 2020/vlsi/CNN/FilterMemory.mem} /main/FilterMem/ram
 add wave -position insertpoint sim:/main/*
 
 force -freeze sim:/main/rst 1 0
 force -freeze sim:/main/clk 1 0, 0 {50 ps} -r 100
+force -freeze sim:/main/start 1 0
+force -freeze sim:/main/dmaStartSignal 0 0
 run
+noforce sim:/main/dmaStartSignal
+noforce sim:/main/dmaStartSignal
+noforce sim:/main/dmaStartSignal
 force -freeze sim:/main/rst 0 0
 run
 
- for {set i 0} {$i < 100} {incr i} {
+
+
+
+ for {set i 0} {$i < 40} {incr i} {
 
 run
 
  }
+
+
+
