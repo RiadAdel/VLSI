@@ -359,9 +359,7 @@ BEGIN
 				end if ;
 			end if ;
 		 when FIN=>
-			
-	
-			
+			next_state<=FIN;
 	
 	end case;
 end process ;
